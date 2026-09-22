@@ -1,0 +1,109 @@
+@model List<JobApply.Models.Vaga>
+
+@{
+    ViewData["Title"] = "Vagas";
+}
+
+<div class="text-center">
+    <h1>Vagas</h1>
+    <form asp-action="Index" method="get" class="mb-4">
+
+        <div class="row">
+
+            <div class="col-md-5">
+                <label class="form-label">Pesquisar</label>
+
+                <input type="text" name="busca" value="@ViewBag.Busca" class="form-control"
+                    placeholder="Título ou empresa" />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+
+                <select name="status" class="form-select">
+                    <option value="">Todos</option>
+
+                    <option value="Interessado" selected="@(ViewBag.Status == "Interessado")">
+                        Interessado
+                    </option>
+
+                    <option value="Candidatado" selected="@(ViewBag.Status == "Candidatado")">
+                        Candidatado
+                    </option>
+
+                    <option value="Entrevista" selected="@(ViewBag.Status == "Entrevista")">
+                        Entrevista
+                    </option>
+
+                    <option value="Recusado" selected="@(ViewBag.Status == "Recusado")">
+                        Recusado
+                    </option>
+
+                    <option value="Aprovado" selected="@(ViewBag.Status == "Aprovado")">
+                        Aprovado
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end gap-2">
+
+                <button type="submit" class="btn btn-primary">
+                    Pesquisar
+                </button>
+
+                <a asp-action="Index" class="btn btn-secondary">
+                    Limpar
+                </a>
+
+            </div>
+
+        </div>
+
+    </form>
+
+    <p>Vagas cadastradas no JobApply</p>
+</div>
+<a asp-controller="Vagas" asp-action="Create" class="btn btn-success mb-3">
+    + Nova Vaga
+</a>
+
+<div class="container mt-4">
+
+    @foreach (var vaga in Model)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+
+                <h5 class="card-title">@vaga.Titulo</h5>
+
+                <p class="card-text">
+                    <strong>Empresa:</strong> @vaga.Empresa
+                </p>
+
+                <p class="card-text">
+                    <strong>Localização:</strong> @vaga.Localizacao
+                </p>
+
+                <p class="card-text">
+                    <strong>Status:</strong> @vaga.Status
+                </p>
+
+                <a href="@vaga.Link" target="_blank" class="btn btn-primary">
+                    Ver vaga
+                </a>
+                <a asp-controller="Vagas" asp-action="Edit" asp-route-id="@vaga.Id" class="btn btn-warning">
+                    Editar
+                </a>
+                <form asp-action="Delete" asp-route-id="@vaga.Id" method="post" style="display:inline;"
+                onsubmit="return confirm('Tem certeza que deseja excluir esta vaga?');">
+
+                    <button type="submit" class="btn btn-danger">
+                        Excluir
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    }
+
+</div>

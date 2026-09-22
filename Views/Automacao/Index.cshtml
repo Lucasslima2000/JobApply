@@ -1,0 +1,165 @@
+@model List<JobApply.Models.VagaLinkedIn>
+
+@{
+    ViewData["Title"] = "Automação";
+}
+
+@if (TempData["MensagemCandidatura"] != null)
+{
+    <div class="alert alert-@TempData["TipoMensagem"] alert-dismissible fade show" role="alert">
+        @TempData["MensagemCandidatura"]
+
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar">
+        </button>
+    </div>
+}
+
+<div class="container">
+
+    <h1>Automação de Vagas</h1>
+
+    <p>
+        Pesquise vagas automaticamente no LinkedIn.
+    </p>
+
+    <form asp-action="Index" method="get">
+
+        <div class="row g-3 align-items-end">
+
+            <div class="col-md-2">
+                <label class="form-label">Site</label>
+
+                <select class="form-select">
+                    <option>LinkedIn</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Buscar por</label>
+
+                <input type="text" name="busca" value="@ViewBag.Busca" class="form-control"
+                    placeholder="Ex: Estágio TI" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Localização</label>
+
+                <input type="text" name="localizacao" value="@ViewBag.Localizacao" class="form-control"
+                    placeholder="Ex: São Paulo" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Publicação</label>
+
+                <select name="periodo" class="form-select">
+
+                    <option value="24h" selected="@(ViewBag.Periodo == "24h")">
+                        Últimas 24 horas
+                    </option>
+
+                    <option value="semana" selected="@(ViewBag.Periodo == "semana")">
+                        Última semana
+                    </option>
+
+                    <option value="mes" selected="@(ViewBag.Periodo == "mes")">
+                        Último mês
+                    </option>
+
+                </select>
+            </div>
+
+        </div>
+
+        <div class="mt-3">
+
+            <button type="submit" class="btn btn-primary">
+                🔎 Buscar vagas
+            </button>
+
+        </div>
+
+    </form>
+
+    @if (Model.Any())
+    {
+        <hr />
+
+        <h2>Vagas encontradas</h2>
+
+        <p class="text-muted">
+            Foram encontradas <strong>@Model.Count</strong> vagas.
+        </p>
+
+        <div class="row">
+
+            @foreach (var vaga in Model)
+            {
+                <div class="col-md-4 mb-3">
+
+                    <div class="card h-100">
+
+                        <div class="card-body">
+
+                            <h5 class="card-title">
+                                @vaga.Titulo
+                            </h5>
+
+                            <p class="card-text">
+                                <strong>Empresa:</strong>
+                                @vaga.Empresa
+                            </p>
+
+                            <p class="card-text">
+                                <strong>Localização:</strong>
+                                @vaga.Localizacao
+                            </p>
+
+                            @if (!string.IsNullOrWhiteSpace(vaga.Publicacao))
+                            {
+                                <p class="card-text">
+                                    <strong>Publicação:</strong>
+                                    @vaga.Publicacao
+                                </p>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(vaga.StatusLinkedIn))
+                            {
+                                <p class="card-text">
+                                    <strong>Status no LinkedIn:</strong>
+                                    @vaga.StatusLinkedIn
+                                </p>
+                            }
+
+                            <div class="d-flex gap-2">
+                                <a href="@vaga.Link" target="_blank" class="btn btn-primary">
+                                    Ver vaga
+                                </a>
+
+                                <a href="@Url.Action("Candidatar", "Automacao", new
+                                                                                {
+                                                                                    link = vaga.Link,
+                                                                                    busca = ViewBag.Busca,
+                                                                                    localizacao = ViewBag.Localizacao,  
+                                                                                    periodo = ViewBag.Periodo
+                                                                                })" class="btn btn-success">
+                                    Candidatar-se
+                                </a>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ViewBag.Busca))
+    {
+        <div class="alert alert-warning mt-4">
+            Nenhuma vaga encontrada.
+        </div>
+    }
+
+</div>

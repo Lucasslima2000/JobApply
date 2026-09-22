@@ -1,0 +1,67 @@
+@model JobApply.Models.Vaga
+
+@{
+    ViewData["Title"] = "Editar Vaga";
+}
+
+<div class="container">
+    <h1>Editar Vaga</h1>
+
+    <form asp-action="Edit" method="post">
+
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="Titulo" class="form-label"></label>
+            <input asp-for="Titulo" class="form-control" />
+            <span asp-validation-for="Titulo" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Empresa" class="form-label"></label>
+            <input asp-for="Empresa" class="form-control" />
+            <span asp-validation-for="Empresa" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Localizacao" class="form-label"></label>
+            <input asp-for="Localizacao" class="form-control" />
+            <span asp-validation-for="Localizacao" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Link" class="form-label"></label>
+            <input asp-for="Link" class="form-control" />
+            <span asp-validation-for="Link" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Status" class="form-label"></label>
+
+            <select asp-for="Status" class="form-select">
+                <option value="Interessado">Interessado</option>
+                <option value="Candidatado">Candidatado</option>
+                <option value="Entrevista">Entrevista</option>
+                <option value="Recusado">Recusado</option>
+                <option value="Aprovado">Aprovado</option>
+            </select>
+
+            <span asp-validation-for="Status" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Salvar alterações
+        </button>
+
+        <a asp-action="Index" class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

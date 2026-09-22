@@ -1,0 +1,19 @@
+# Build do .NET
+bin/
+obj/
+
+# Visual Studio Code
+.vscode/
+
+# Perfil persistente do Playwright/Chromium
+linkedin-profile/
+
+# HTML de debug
+linkedin-debug.html
+
+# Arquivos temporários
+*.tmp
+*.log
+
+# Configurações locais
+appsettings.Development.json
