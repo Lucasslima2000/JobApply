@@ -1,0 +1,255 @@
+@model JobApply.Controllers.LoginViewModel
+
+@{
+    ViewData["Title"] = "Entrar";
+}
+
+<style>
+    body {
+        background: #f4f6f9;
+    }
+
+    .login-page {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 15px;
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 980px;
+        min-height: 560px;
+        background: #ffffff;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.10);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .login-brand {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        color: white;
+        padding: 55px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .brand-logo {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.20);
+    }
+
+    .login-brand h1 {
+        font-size: 42px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        letter-spacing: -1px;
+    }
+
+    .login-brand p {
+        font-size: 17px;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.88);
+        max-width: 390px;
+        margin-bottom: 0;
+    }
+
+    .brand-line {
+        width: 55px;
+        height: 4px;
+        background: #ffffff;
+        border-radius: 10px;
+        margin: 25px 0;
+    }
+
+    .login-form-area {
+        padding: 55px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .login-form-area h2 {
+        font-size: 30px;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+        color: #6c757d;
+        margin-bottom: 32px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 8px;
+    }
+
+    .form-control {
+        min-height: 50px;
+        border: 1px solid #dfe3e8;
+        border-radius: 12px;
+        padding: 12px 15px;
+        transition: all 0.2s ease;
+        box-shadow: none;
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.10);
+    }
+
+    .login-button {
+        min-height: 50px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        margin-top: 10px;
+        transition: all 0.2s ease;
+    }
+
+    .login-button:hover {
+        transform: translateY(-1px);
+    }
+
+    .register-link {
+        text-align: center;
+        margin-top: 25px;
+        color: #6c757d;
+    }
+
+    .register-link a {
+        color: #0d6efd;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+
+    .alert {
+        border-radius: 12px;
+        border: none;
+    }
+
+    @@media (max-width: 768px) {
+        .login-container {
+            grid-template-columns: 1fr;
+            min-height: auto;
+        }
+
+        .login-brand {
+            padding: 40px 30px;
+        }
+
+        .login-brand h1 {
+            font-size: 34px;
+        }
+
+        .login-form-area {
+            padding: 40px 30px;
+        }
+    }
+</style>
+
+<div class="login-page">
+
+    <div class="login-container">
+
+        <!-- LADO ESQUERDO -->
+        <div class="login-brand">
+
+            <div class="brand-logo">
+                JA
+            </div>
+
+            <h1>JobApply</h1>
+
+            <div class="brand-line"></div>
+
+            <p>
+                Organize suas oportunidades,
+                acompanhe suas candidaturas e
+                automatize sua busca por vagas.
+            </p>
+
+        </div>
+
+        <!-- LADO DIREITO -->
+        <div class="login-form-area">
+
+            <h2>Bem-vindo de volta</h2>
+
+            <p class="login-subtitle">
+                Entre na sua conta para continuar.
+            </p>
+
+            @if (TempData["CadastroSucesso"] != null)
+            {
+                <div class="alert alert-success mb-4">
+                    @TempData["CadastroSucesso"]
+                </div>
+            }
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <form asp-controller="Conta" asp-action="Login" method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+                <div class="mb-4">
+                    <label asp-for="Nome" class="form-label">
+                        Nome
+                    </label>
+
+                    <input asp-for="Nome" class="form-control" placeholder="Digite seu nome" autocomplete="username" />
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Senha" class="form-label">
+                        Senha
+                    </label>
+
+                    <input asp-for="Senha" type="password" class="form-control" placeholder="Digite sua senha"
+                        autocomplete="current-password" />
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 login-button">
+                    Entrar
+                </button>
+
+            </form>
+
+            <div class="text-center mt-4">
+                <a href="/RecuperarSenha" class="text-decoration-none">
+                    Esqueci minha senha
+                </a>
+            </div>            
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

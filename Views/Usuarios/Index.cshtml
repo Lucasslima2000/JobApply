@@ -1,0 +1,128 @@
+@model IEnumerable<JobApply.Models.Usuario>
+
+@{
+    ViewData["Title"] = "Usuários";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h1 class="h3 mb-1">Usuários</h1>
+        <p class="text-muted mb-0">
+            Gerencie os usuários do JobApply.
+        </p>
+    </div>
+
+    <a asp-action="Criar" class="btn btn-primary">
+        Novo usuário
+    </a>
+
+</div>
+
+@if (TempData["Mensagem"] != null)
+{
+    <div class="alert alert-@TempData["TipoMensagem"]">
+        @TempData["Mensagem"]
+    </div>
+}
+
+<div class="card shadow-sm">
+
+    <div class="card-body p-0">
+
+        @if (!Model.Any())
+        {
+            <div class="p-4 text-center text-muted">
+                Nenhum usuário cadastrado.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+
+                <table class="table table-hover mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Status</th>
+                            <th>Data do Cadastro</th>
+                            <th class="text-end">
+                                Ações
+                            </th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var usuario in Model)
+                        {
+                            <tr>
+
+                                <td>
+                                    <strong>
+                                        @usuario.Nome
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(
+                                                                usuario.Email))
+                                    {
+                                        <span class="text-muted">
+                                            Não informado
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        @usuario.Email
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (usuario.Ativo)
+                                    {
+                                        <span class="badge text-bg-success">
+                                            Ativo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-secondary">
+                                            Inativo
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @usuario.DataCadastro.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </td>
+
+                                <td class="text-end">
+
+                                    <a asp-action="Editar" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-primary">
+                                        Editar
+                                    </a>
+
+                                    <a asp-action="Excluir" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-danger">
+                                        Excluir
+                                    </a>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+
+</div>

@@ -1,9 +1,11 @@
 using JobApply.Models;
 using JobApply.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JobApply.Controllers
 {
+    [Authorize]
     public class AutomacaoController : Controller
     {
         private readonly LinkedInService _linkedInService;

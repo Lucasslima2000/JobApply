@@ -1,0 +1,122 @@
+@model JobApply.Controllers.UsuariosController.UsuarioFormViewModel
+
+@{
+    ViewData["Title"] = "Novo usuário";
+}
+
+<div class="mb-4">
+
+    <h1 class="h3 mb-1">
+        Novo usuário
+    </h1>
+
+    <p class="text-muted">
+        Cadastre um novo usuário no JobApply.
+    </p>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        <form asp-action="Criar"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly"
+                 class="alert alert-danger">
+            </div>
+
+            <div class="mb-3">
+
+                <label asp-for="Nome"
+                       class="form-label">
+                    Nome
+                </label>
+
+                <input asp-for="Nome"
+                       class="form-control"
+                       autocomplete="username" />
+
+                <span asp-validation-for="Nome"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label asp-for="Email"
+                       class="form-label">
+                    E-mail
+                    <span class="text-muted">
+                        (opcional)
+                    </span>
+                </label>
+
+                <input asp-for="Email"
+                       type="email"
+                       class="form-control"
+                       autocomplete="email" />
+
+                <span asp-validation-for="Email"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label asp-for="Senha"
+                       class="form-label">
+                    Senha
+                </label>
+
+                <input asp-for="Senha"
+                       type="password"
+                       class="form-control"
+                       autocomplete="new-password" />
+
+                <span asp-validation-for="Senha"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="form-check mb-4">
+
+                <input asp-for="Ativo"
+                       class="form-check-input" />
+
+                <label asp-for="Ativo"
+                       class="form-check-label">
+                    Usuário ativo
+                </label>
+
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    Salvar
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

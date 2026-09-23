@@ -3,9 +3,11 @@ using JobApply.Models;
 using JobApply.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JobApply.Controllers
 {
+    [Authorize]
     public class VagasController : Controller
     {
         private readonly AppDbContext _context;
