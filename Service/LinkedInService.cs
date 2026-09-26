@@ -1,6 +1,7 @@
 using Microsoft.Playwright;
 using JobApply.Models;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace JobApply.Services
 {
@@ -66,6 +67,7 @@ namespace JobApply.Services
                         WaitUntil = WaitUntilState.DOMContentLoaded,
                         Timeout = 30000
                     });
+                Console.WriteLine("========== 2 - TERMINOU GotoAsync ==========");
             }
             catch (TimeoutException)
             {
@@ -890,17 +892,1500 @@ namespace JobApply.Services
 
 
 
+        //         public async Task<List<VagaLinkedIn>> BuscarVagasAsync(
+        //      string termo,
+        //      string? localizacao,
+        //      string? periodo)
+        //         {
+        //             Console.WriteLine("========== ENTROU NO BuscarVagasAsync ==========");
+        //             var pagina = await ObterPaginaAsync();
 
+        //             var vagasPorId =
+        //                 new Dictionary<string, VagaLinkedIn>();
+
+        //             // ============================================================
+        //             // PERÍODO
+        //             // ============================================================
+
+        //             string periodoFiltro =
+        //                 periodo?.Trim().ToLowerInvariant() switch
+        //                 {
+        //                     "24h" => "r86400",
+        //                     "24 horas" => "r86400",
+
+        //                     "semana" => "r604800",
+        //                     "ultima semana" => "r604800",
+        //                     "última semana" => "r604800",
+        //                     "7 dias" => "r604800",
+
+        //                     "mes" => "r2592000",
+        //                     "mês" => "r2592000",
+        //                     "ultimo mes" => "r2592000",
+        //                     "último mês" => "r2592000",
+        //                     "30 dias" => "r2592000",
+
+        //                     _ => "r86400"
+        //                 };
+
+        //             const string geoIdSaoPaulo =
+        //                 "105871508";
+
+        //             const int quantidadeSolicitada =
+        //                 7;
+
+        //             const int maxRequisicoes =
+        //                 50;
+
+        //             // ============================================================
+        //             // NORMALIZAÇÃO
+        //             // ============================================================
+
+        //             string Normalizar(string texto)
+        //             {
+        //                 return texto
+        //                     .Trim()
+        //                     .ToLowerInvariant()
+        //                     .Replace("á", "a")
+        //                     .Replace("à", "a")
+        //                     .Replace("ã", "a")
+        //                     .Replace("â", "a")
+        //                     .Replace("ä", "a")
+        //                     .Replace("é", "e")
+        //                     .Replace("è", "e")
+        //                     .Replace("ê", "e")
+        //                     .Replace("ë", "e")
+        //                     .Replace("í", "i")
+        //                     .Replace("ì", "i")
+        //                     .Replace("î", "i")
+        //                     .Replace("ï", "i")
+        //                     .Replace("ó", "o")
+        //                     .Replace("ò", "o")
+        //                     .Replace("õ", "o")
+        //                     .Replace("ô", "o")
+        //                     .Replace("ö", "o")
+        //                     .Replace("ú", "u")
+        //                     .Replace("ù", "u")
+        //                     .Replace("û", "u")
+        //                     .Replace("ü", "u")
+        //                     .Replace("ç", "c");
+        //             }
+
+        //             bool ContemExpressao(
+        //                 string texto,
+        //                 string expressao)
+        //             {
+        //                 string textoNormalizado =
+        //                     Normalizar(texto);
+
+        //                 string expressaoNormalizada =
+        //                     Normalizar(expressao);
+
+        //                 if (string.IsNullOrWhiteSpace(
+        //                     expressaoNormalizada))
+        //                 {
+        //                     return false;
+        //                 }
+
+        //                 if (expressaoNormalizada.Contains(' '))
+        //                 {
+        //                     return textoNormalizado.Contains(
+        //                         expressaoNormalizada
+        //                     );
+        //                 }
+
+        //                 return System.Text.RegularExpressions.Regex.IsMatch(
+        //                     textoNormalizado,
+        //                     $@"(?<![\p{{L}}\p{{N}}])" +
+        //                     System.Text.RegularExpressions.Regex.Escape(
+        //                         expressaoNormalizada
+        //                     ) +
+        //                     $@"(?![\p{{L}}\p{{N}}])"
+        //                 );
+        //             }
+
+        //             // ============================================================
+        //             // TERMOS DE TI
+        //             // ============================================================
+
+        //             var termosTI = new[]
+        //             {
+        //         "ti",
+        //         "tecnologia",
+        //         "tecnologia da informação",
+        //         "technology",
+        //         "tech",
+
+        //         "desenvolvedor",
+        //         "desenvolvedora",
+        //         "developer",
+        //         "programador",
+        //         "programadora",
+        //         "software",
+        //         "programming",
+
+        //         "full stack",
+        //         "fullstack",
+        //         "frontend",
+        //         "front end",
+        //         "front-end",
+        //         "backend",
+        //         "back end",
+        //         "back-end",
+
+        //         "java",
+        //         "python",
+        //         "javascript",
+        //         "typescript",
+        //         "c#",
+        //         ".net",
+        //         "php",
+        //         "react",
+        //         "angular",
+        //         "node",
+        //         "node.js",
+
+        //         "dados",
+        //         "data",
+        //         "analista de dados",
+        //         "data analyst",
+        //         "data science",
+        //         "cientista de dados",
+        //         "business intelligence",
+        //         "power bi",
+
+        //         "sql",
+        //         "banco de dados",
+        //         "database",
+
+        //         "suporte",
+        //         "suporte técnico",
+        //         "suporte ti",
+        //         "help desk",
+        //         "service desk",
+        //         "analista de suporte",
+        //         "technical support",
+
+        //         "infraestrutura",
+        //         "infra",
+        //         "redes",
+        //         "network",
+        //         "networking",
+        //         "servidor",
+
+        //         "sistemas",
+        //         "sistemas de informação",
+        //         "analista de sistemas",
+
+        //         "cibersegurança",
+        //         "cybersecurity",
+        //         "segurança da informação",
+        //         "information security",
+
+        //         "cloud",
+        //         "aws",
+        //         "azure",
+        //         "devops",
+
+        //         "qa",
+        //         "quality assurance",
+        //         "testes de software",
+
+        //         "automação",
+        //         "automation",
+        //         "robótica",
+        //         "robotica",
+
+        //         "inteligência artificial",
+        //         "artificial intelligence",
+        //         "machine learning",
+
+        //         "lgpd",
+        //         "privacidade",
+        //         "governança de ti",
+        //         "governança de dados"
+        //     };
+
+        //             // ============================================================
+        //             // TERMOS CLARAMENTE FORA DE TI
+        //             // ============================================================
+
+        //             var termosForaTI = new[]
+        //             {
+        //         "logística",
+        //         "logistica",
+        //         "delivery",
+
+        //         "recepcionista",
+        //         "recepção",
+        //         "recepcao",
+
+        //         "atendente",
+        //         "atendimento",
+
+        //         "administrativo",
+        //         "administrativa",
+        //         "administração",
+        //         "administracao",
+
+        //         "estoque",
+        //         "almoxarifado",
+
+        //         "financeiro",
+        //         "finanças",
+        //         "financas",
+        //         "contabilidade",
+        //         "contábil",
+        //         "contabil",
+
+        //         "marketing",
+
+        //         "vendas",
+        //         "vendedor",
+        //         "vendedora",
+        //         "comercial",
+        //         "business development",
+
+        //         "recursos humanos",
+        //         "rh",
+        //         "recrutamento",
+
+        //         "jurídico",
+        //         "juridico",
+        //         "advocacia",
+
+        //         "compras",
+        //         "procurement",
+
+        //         "motorista",
+
+        //         "enfermagem",
+        //         "farmácia",
+        //         "farmacia",
+
+        //         "meio ambiente",
+
+        //         "engenharia civil",
+        //         "engenharia mecânica",
+        //         "engenharia mecanica",
+        //         "engenharia elétrica",
+        //         "engenharia eletrica",
+
+        //         "facilities",
+
+        //         "legal operations",
+
+        //         "accounting",
+        //         "accountant",
+
+        //         "merchandising",
+
+        //         "jovem aprendiz",
+        //         "aprendiz administrativo"
+        //     };
+
+        //             bool buscaTI =
+        //                 Normalizar(termo).Contains("estagio")
+        //                 ||
+        //                 termosTI.Any(
+        //                     x => ContemExpressao(termo, x)
+        //                 );
+
+        //             // ============================================================
+        //             // 1. ABRE A PESQUISA DO LINKEDIN
+        //             // ============================================================
+
+        //             string buscaUrl =
+        //                         "https://www.linkedin.com/jobs/search-results/?" +
+        //                         $"keywords={Uri.EscapeDataString(termo).Replace("%20", "+")}" +
+        //                         $"&origin=JOB_SEARCH_PAGE_JOB_FILTER" +
+        //                         $"&geoId={geoIdSaoPaulo}" +
+        //                         $"&distance=0.0" +
+        //                         $"&f_TPR={periodoFiltro}";
+
+        //             Console.WriteLine("========== URL DA BUSCA MONTADA ==========");
+        //             Console.WriteLine(buscaUrl);
+
+        //             // ============================================================
+        //             // CAPTURA O ENDPOINT REAL
+        //             // ============================================================
+
+        //             string? endpointBuscaReal = null;
+
+        //             // ============================================================
+        //             // CAPTURA O POST REAL DO LINKEDIN
+        //             // ============================================================
+
+        //             pagina.Request += (_, request) =>
+        //             {
+        //                 if (
+        //                     request.Url.Contains(
+        //                         "/flagship-web/jobs/search-results/",
+        //                         StringComparison.OrdinalIgnoreCase
+        //                     )
+        //                     &&
+        //                     request.Method.Equals(
+        //                         "POST",
+        //                         StringComparison.OrdinalIgnoreCase
+        //                     )
+        //                 )
+        //                 {
+        //                     endpointBuscaReal = request.Url;
+        //                 }
+        //             };
+
+        //             // ============================================================
+        //             // EXECUTA A BUSCA
+        //             // ============================================================
+
+        //             // ============================================================
+        //             // AGUARDA A LISTA DE VAGAS DO LINKEDIN
+        //             // ============================================================
+
+        //             try
+        //             {
+        //                 await pagina.GotoAsync(
+        //                     buscaUrl,
+        //                     new PageGotoOptions
+        //                     {
+        //                         WaitUntil = WaitUntilState.DOMContentLoaded,
+        //                         Timeout = 60000
+        //                     }
+        //                 );
+
+        //                 Console.WriteLine(
+        //                     "========== TERMINOU GOTO =========="
+        //                 );
+
+        //                 Console.WriteLine(
+        //                     $"URL ATUAL: {pagina.Url}"
+        //                 );
+        //             }
+        //             catch
+        //             {
+        //                 // O LinkedIn pode carregar a página parcialmente.
+        //             }
+        //             // ============================================================
+        //             // CAPTURA O referralSearchId DA URL FINAL
+        //             // ============================================================
+
+        //             string? referralSearchId = null;
+
+        //             try
+        //             {
+        //                 var uriFinal =
+        //                     new Uri(pagina.Url);
+
+        //                 var query =
+        //                     System.Web.HttpUtility.ParseQueryString(
+        //                         uriFinal.Query
+        //                     );
+
+        //                 referralSearchId =
+        //                     query["referralSearchId"];
+        //             }
+        //             catch
+        //             {
+        //                 referralSearchId = null;
+        //             }
+
+        //             // ============================================================
+        //             // DESCOBRE O DATALET
+        //             // ============================================================
+
+        //             string? endpoint = null;
+
+        //             string? bodyId = null;
+
+        //             var datalets =
+        //                 pagina.Locator(
+        //                     "code[id^='datalet-bpr-guid-']"
+        //                 );
+
+        //             int quantidadeDatalets =
+        //                 await datalets.CountAsync();
+
+        //             Console.WriteLine(
+        //                 $"========== DATALets ENCONTRADOS: {quantidadeDatalets} =========="
+        //             );
+
+        //             for (
+        //                 int i = 0;
+        //                 i < quantidadeDatalets;
+        //                 i++)
+        //             {
+        //                 try
+        //                 {
+        //                     string texto =
+        //                         await datalets
+        //                             .Nth(i)
+        //                             .InnerTextAsync();
+
+        //                     if (
+        //                         !texto.Contains(
+        //                             "voyagerJobsDashJobCards",
+        //                             StringComparison.OrdinalIgnoreCase
+        //                         )
+        //                     )
+        //                     {
+        //                         continue;
+        //                     }
+
+        //                     Console.WriteLine(
+        //                         $"========== DATALet DE JOBS ENCONTRADO: {i} =========="
+        //                     );
+
+        //                     using var metaJson =
+        //                         JsonDocument.Parse(texto);
+
+        //                     var root =
+        //                         metaJson.RootElement;
+
+        //                     if (
+        //                         root.TryGetProperty(
+        //                             "request",
+        //                             out var requestElement
+        //                         )
+        //                     )
+        //                     {
+        //                         endpoint =
+        //                             requestElement.GetString();
+        //                     }
+
+        //                     if (
+        //                         root.TryGetProperty(
+        //                             "body",
+        //                             out var bodyElement
+        //                         )
+        //                     )
+        //                     {
+        //                         bodyId =
+        //                             bodyElement.GetString();
+        //                     }
+
+        //                     Console.WriteLine(
+        //                         $"ENDPOINT ENCONTRADO: {!string.IsNullOrWhiteSpace(endpoint)}"
+        //                     );
+
+        //                     Console.WriteLine(
+        //                         $"BODY ID ENCONTRADO: {!string.IsNullOrWhiteSpace(bodyId)}"
+        //                     );
+
+        //                     break;
+        //                 }
+        //                 catch (Exception ex)
+        //                 {
+        //                     Console.WriteLine(
+        //                         $"ERRO NO DATALet {i}: {ex.Message}"
+        //                     );
+        //                 }
+        //             }
+
+        //             Console.WriteLine(
+        //                 "========== RESULTADO DATALets =========="
+        //             );
+
+        //             Console.WriteLine(
+        //                 $"endpoint: {(string.IsNullOrWhiteSpace(endpoint) ? "NÃO ENCONTRADO" : "ENCONTRADO")}"
+        //             );
+
+        //             Console.WriteLine(
+        //                 $"bodyId: {(string.IsNullOrWhiteSpace(bodyId) ? "NÃO ENCONTRADO" : "ENCONTRADO")}"
+        //             );
+        //             if (
+        //     string.IsNullOrWhiteSpace(endpoint)
+        //     ||
+        //     string.IsNullOrWhiteSpace(bodyId)
+        // )
+        //             {
+        //                 return new List<VagaLinkedIn>();
+        //             }
+
+        //             // ============================================================
+        //             // ENDPOINT UTILIZADO
+        //             // ============================================================
+
+        //             string endpointUtilizado =
+        //                 new Uri(
+        //                     new Uri("https://www.linkedin.com"),
+        //                     endpoint!
+        //                 ).ToString();
+
+
+
+        //             // ============================================================
+        //             // CORRIGE O ORIGIN PARA O MESMO DA PESQUISA MANUAL
+        //             // ============================================================
+
+        //             endpointUtilizado =
+        //                 endpointUtilizado.Replace(
+        //                     "JOB_SEARCH_PAGE_OTHER_ENTRY",
+        //                     "JOB_SEARCH_PAGE_JOB_FILTER",
+        //                     StringComparison.OrdinalIgnoreCase
+        //                 );
+
+        //             // ============================================================
+        //             // ADICIONA O referralSearchId DA PESQUISA MANUAL
+        //             // ============================================================
+
+        //             if (
+        //                 !string.IsNullOrWhiteSpace(referralSearchId)
+        //                 &&
+        //                 !endpointUtilizado.Contains(
+        //                     "referralSearchId=",
+        //                     StringComparison.OrdinalIgnoreCase
+        //                 )
+        //             )
+        //             {
+        //                 endpointUtilizado +=
+        //                     endpointUtilizado.Contains("?")
+        //                         ? $"&referralSearchId={Uri.EscapeDataString(referralSearchId)}"
+        //                         : $"?referralSearchId={Uri.EscapeDataString(referralSearchId)}";
+        //             }
+
+        //             string endpointBase =
+        //                 endpointUtilizado;
+
+        //             // ============================================================
+        //             // 3. FUNÇÃO PARA PEGAR ID DO URN
+        //             // ============================================================
+
+        //             string ExtrairId(string? urn)
+        //             {
+        //                 if (string.IsNullOrWhiteSpace(urn))
+        //                     return "";
+
+        //                 var match =
+        //                     System.Text.RegularExpressions.Regex.Match(
+        //                         urn,
+        //                         @"\((\d+),"
+        //                     );
+
+        //                 if (match.Success)
+        //                 {
+        //                     return match.Groups[1].Value;
+        //                 }
+
+        //                 match =
+        //                     System.Text.RegularExpressions.Regex.Match(
+        //                         urn,
+        //                         @":(\d+)$"
+        //                     );
+
+        //                 if (match.Success)
+        //                 {
+        //                     return match.Groups[1].Value;
+        //                 }
+
+        //                 return "";
+        //             }
+
+        //             // ============================================================
+        //             // 4. PROCESSA UMA RESPOSTA
+        //             // ============================================================
+
+        //             int totalResultados =
+        //                 0;
+
+        //             int ProcessarResposta(
+        //                 string json,
+        //                 bool exibirLog)
+        //             {
+        //                 int novos =
+        //                     0;
+
+        //                 using var documento =
+        //                     JsonDocument.Parse(json);
+
+        //                 var raiz =
+        //                     documento.RootElement;
+
+        //                 JsonElement dados;
+
+        //                 if (
+        //                     raiz.TryGetProperty(
+        //                         "data",
+        //                         out var dataElement
+        //                     )
+        //                 )
+        //                 {
+        //                     dados = dataElement;
+        //                 }
+        //                 else
+        //                 {
+        //                     dados = raiz;
+        //                 }
+
+        //                 // --------------------------------------------------------
+        //                 // PAGINAÇÃO
+        //                 // --------------------------------------------------------
+
+        //                 int paginaTotal =
+        //                     0;
+
+        //                 if (
+        //                     dados.TryGetProperty(
+        //                         "paging",
+        //                         out var paging
+        //                     )
+        //                 )
+        //                 {
+        //                     if (
+        //                         paging.TryGetProperty(
+        //                             "total",
+        //                             out var totalElement
+        //                         )
+        //                     )
+        //                     {
+        //                         paginaTotal =
+        //                             totalElement.GetInt32();
+        //                     }
+        //                 }
+
+        //                 if (paginaTotal > 0)
+        //                 {
+        //                     totalResultados =
+        //                         paginaTotal;
+        //                 }
+
+        //                 // --------------------------------------------------------
+        //                 // ELEMENTS
+        //                 // --------------------------------------------------------
+
+        //                 if (
+        //                     !dados.TryGetProperty(
+        //                         "elements",
+        //                         out var elements
+        //                     )
+        //                 )
+        //                 {
+        //                     return 0;
+        //                 }
+
+        //                 // --------------------------------------------------------
+        //                 // INDEXA JOB POSTING CARDS
+        //                 // --------------------------------------------------------
+
+        //                 var cards =
+        //                     new Dictionary<string, JsonElement>();
+
+        //                 if (
+        //                     raiz.TryGetProperty(
+        //                         "included",
+        //                         out var included
+        //                     )
+        //                     &&
+        //                     included.ValueKind ==
+        //                         JsonValueKind.Array
+        //                 )
+        //                 {
+        //                     foreach (
+        //                         var item
+        //                         in included.EnumerateArray()
+        //                     )
+        //                     {
+        //                         if (
+        //                             !item.TryGetProperty(
+        //                                 "$type",
+        //                                 out var typeElement
+        //                             )
+        //                         )
+        //                         {
+        //                             continue;
+        //                         }
+
+        //                         string tipo =
+        //                             typeElement.GetString() ?? "";
+
+        //                         if (
+        //                             !tipo.EndsWith(
+        //                                 "JobPostingCard",
+        //                                 StringComparison.Ordinal
+        //                             )
+        //                         )
+        //                         {
+        //                             continue;
+        //                         }
+
+        //                         string id =
+        //                             "";
+
+        //                         if (
+        //                             item.TryGetProperty(
+        //                                 "jobPostingUrn",
+        //                                 out var jobUrnElement
+        //                             )
+        //                         )
+        //                         {
+        //                             id =
+        //                                 ExtrairId(
+        //                                     jobUrnElement.GetString()
+        //                                 );
+        //                         }
+
+        //                         if (
+        //                             string.IsNullOrWhiteSpace(id)
+        //                             &&
+        //                             item.TryGetProperty(
+        //                                 "entityUrn",
+        //                                 out var entityElement
+        //                             )
+        //                         )
+        //                         {
+        //                             id =
+        //                                 ExtrairId(
+        //                                     entityElement.GetString()
+        //                                 );
+        //                         }
+
+        //                         if (
+        //                             !string.IsNullOrWhiteSpace(id)
+        //                         )
+        //                         {
+        //                             cards[id] =
+        //                                 item;
+        //                         }
+        //                     }
+        //                 }
+
+        //                 // --------------------------------------------------------
+        //                 // PROCESSA ELEMENTS
+        //                 // --------------------------------------------------------
+
+        //                 foreach (
+        //                     var element
+        //                     in elements.EnumerateArray()
+        //                 )
+        //                 {
+        //                     try
+        //                     {
+        //                         if (
+        //                             !element.TryGetProperty(
+        //                                 "jobCardUnion",
+        //                                 out var unionElement
+        //                             )
+        //                         )
+        //                         {
+        //                             continue;
+        //                         }
+
+        //                         if (
+        //                             !unionElement.TryGetProperty(
+        //                                 "*jobPostingCard",
+        //                                 out var cardUrnElement
+        //                             )
+        //                         )
+        //                         {
+        //                             continue;
+        //                         }
+
+        //                         string cardUrn =
+        //                             cardUrnElement.GetString() ?? "";
+
+        //                         string id =
+        //                             ExtrairId(cardUrn);
+
+        //                         if (
+        //                             string.IsNullOrWhiteSpace(id)
+        //                             ||
+        //                             vagasPorId.ContainsKey(id)
+        //                         )
+        //                         {
+        //                             continue;
+        //                         }
+
+        //                         if (
+        //                             !cards.TryGetValue(
+        //                                 id,
+        //                                 out var card
+        //                             )
+        //                         )
+        //                         {
+        //                             continue;
+        //                         }
+
+        //                         // ------------------------------------------------
+        //                         // TÍTULO
+        //                         // ------------------------------------------------
+
+        //                         string titulo =
+        //                             "";
+
+        //                         if (
+        //                             card.TryGetProperty(
+        //                                 "jobPostingTitle",
+        //                                 out var jobTitleElement
+        //                             )
+        //                         )
+        //                         {
+        //                             titulo =
+        //                                 jobTitleElement.GetString() ?? "";
+        //                         }
+
+        //                         if (
+        //                             string.IsNullOrWhiteSpace(titulo)
+        //                             &&
+        //                             card.TryGetProperty(
+        //                                 "title",
+        //                                 out var titleElement
+        //                             )
+        //                         )
+        //                         {
+        //                             if (
+        //                                 titleElement.TryGetProperty(
+        //                                     "text",
+        //                                     out var textElement
+        //                                 )
+        //                             )
+        //                             {
+        //                                 titulo =
+        //                                     textElement.GetString() ?? "";
+        //                             }
+
+        //                             if (
+        //                                 string.IsNullOrWhiteSpace(titulo)
+        //                                 &&
+        //                                 titleElement.TryGetProperty(
+        //                                     "accessibilityText",
+        //                                     out var accessibilityElement
+        //                                 )
+        //                             )
+        //                             {
+        //                                 titulo =
+        //                                     accessibilityElement.GetString()
+        //                                     ?? "";
+        //                             }
+        //                         }
+
+        //                         titulo =
+        //                             titulo
+        //                                 .Replace(
+        //                                     "with verification",
+        //                                     "",
+        //                                     StringComparison.OrdinalIgnoreCase
+        //                                 )
+        //                                 .Trim();
+
+        //                         if (
+        //                             string.IsNullOrWhiteSpace(titulo)
+        //                         )
+        //                         {
+        //                             continue;
+        //                         }
+
+        //                         // ------------------------------------------------
+        //                         // EMPRESA
+        //                         // ------------------------------------------------
+
+        //                         string empresa =
+        //                             "";
+
+        //                         if (
+        //                             card.TryGetProperty(
+        //                                 "primaryDescription",
+        //                                 out var primaryElement
+        //                             )
+        //                             &&
+        //                             primaryElement.TryGetProperty(
+        //                                 "text",
+        //                                 out var primaryText
+        //                             )
+        //                         )
+        //                         {
+        //                             empresa =
+        //                                 primaryText.GetString() ?? "";
+        //                         }
+
+        //                         // ------------------------------------------------
+        //                         // LOCALIZAÇÃO
+        //                         // ------------------------------------------------
+
+        //                         string local =
+        //                             "";
+
+        //                         if (
+        //                             card.TryGetProperty(
+        //                                 "secondaryDescription",
+        //                                 out var secondaryElement
+        //                             )
+        //                             &&
+        //                             secondaryElement.TryGetProperty(
+        //                                 "text",
+        //                                 out var secondaryText
+        //                             )
+        //                         )
+        //                         {
+        //                             local =
+        //                                 secondaryText.GetString() ?? "";
+        //                         }
+
+        //                         // ------------------------------------------------
+        //                         // LINK
+        //                         // ------------------------------------------------
+
+        //                         string link =
+        //                             $"https://www.linkedin.com/jobs/view/{id}/";
+
+        //                         // ------------------------------------------------
+        //                         // RELEVÂNCIA
+        //                         // ------------------------------------------------
+
+        //                         if (buscaTI)
+        //                         {
+        //                             string textoAnalise =
+        //                                 titulo;
+
+        //                             bool possuiTI =
+        //                                 termosTI.Any(
+        //                                     termoTI =>
+        //                                         ContemExpressao(
+        //                                             textoAnalise,
+        //                                             termoTI
+        //                                         )
+        //                                 );
+
+        //                             bool tituloGenerico =
+        //                                 ContemExpressao(
+        //                                     titulo,
+        //                                     "estagiário"
+        //                                 )
+        //                                 ||
+        //                                 ContemExpressao(
+        //                                     titulo,
+        //                                     "estagiaria"
+        //                                 )
+        //                                 ||
+        //                                 ContemExpressao(
+        //                                     titulo,
+        //                                     "estágio"
+        //                                 )
+        //                                 ||
+        //                                 ContemExpressao(
+        //                                     titulo,
+        //                                     "programa de estágio"
+        //                                 );
+
+        //                             if (
+        //                                 !possuiTI
+        //                                 &&
+        //                                 !tituloGenerico
+        //                             )
+        //                             {
+        //                                 continue;
+        //                             }
+        //                         }
+
+        //                         var vaga =
+        //                             new VagaLinkedIn
+        //                             {
+        //                                 Titulo = titulo,
+        //                                 Empresa = empresa,
+        //                                 Localizacao = local,
+        //                                 Link = link,
+        //                                 Publicacao = "",
+        //                                 StatusLinkedIn = ""
+        //                             };
+
+        //                         vagasPorId.Add(
+        //                             id,
+        //                             vaga
+        //                         );
+
+        //                         novos++;
+        //                     }
+        //                     catch
+        //                     {
+        //                     }
+        //                 }
+
+        //                 return novos;
+        //             }
+
+        //             // ============================================================
+        //             // 5. PROCESSA O PRIMEIRO BODY SSR
+        //             // ============================================================
+
+        //             if (!string.IsNullOrWhiteSpace(bodyId))
+        //             {
+        //                 try
+        //                 {
+        //                     var bodyLocator =
+        //                         pagina.Locator(
+        //                             $"code[id='{bodyId}']"
+        //                         );
+
+        //                     Console.WriteLine(
+        //                         "========== 3 - PROCURANDO BODY =========="
+        //                     );
+
+        //                     int quantidadeBody =
+        //                         await bodyLocator.CountAsync();
+
+        //                     Console.WriteLine(
+        //                         $"BODY encontrado: {quantidadeBody}"
+        //                     );
+
+        //                     if (quantidadeBody > 0)
+        //                     {
+        //                         string bodyJson =
+        //                             await bodyLocator.InnerTextAsync();
+
+        //                         Console.WriteLine(
+        //                             $"BODY JSON obtido: {bodyJson.Length} caracteres"
+        //                         );
+
+        //                         int novosBody =
+        //                             ProcessarResposta(
+        //                                 bodyJson,
+        //                                 false
+        //                             );
+
+        //                         Console.WriteLine(
+        //                             $"ProcessarResposta BODY: {novosBody} novos | Total acumulado: {vagasPorId.Count}"
+        //                         );
+        //                     }
+        //                 }
+        //                 catch (Exception ex)
+        //                 {
+        //                     Console.WriteLine(
+        //                         $"ERRO AO PROCESSAR BODY: {ex.Message}"
+        //                     );
+        //                 }
+        //             }
+
+        //             // ============================================================
+        //             // 6. PAGINAÇÃO
+        //             // ============================================================
+
+        //             int start =
+        //                 0;
+
+        //             int requisicao =
+        //                 0;
+
+        //             int semNovidade =
+        //                 0;
+
+        //             while (
+        //                 requisicao < maxRequisicoes
+        //                 &&
+        //                 (
+        //                     totalResultados == 0
+        //                     ||
+        //                     start < totalResultados
+        //                 )
+        //             )
+        //             {
+        //                 requisicao++;
+
+        //                 string apiUrl =
+        //                     endpointBase;
+
+        //                 // --------------------------------------------------------
+        //                 // COUNT
+        //                 // --------------------------------------------------------
+
+        //                 if (
+        //                     System.Text.RegularExpressions.Regex.IsMatch(
+        //                         apiUrl,
+        //                         @"([?&])count=\d+",
+        //                         System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        //                     )
+        //                 )
+        //                 {
+        //                     apiUrl =
+        //                         System.Text.RegularExpressions.Regex.Replace(
+        //                             apiUrl,
+        //                             @"([?&])count=\d+",
+        //                             $"$1count={quantidadeSolicitada}"
+        //                         );
+        //                 }
+        //                 else
+        //                 {
+        //                     apiUrl +=
+        //                         apiUrl.Contains("?")
+        //                             ? $"&count={quantidadeSolicitada}"
+        //                             : $"?count={quantidadeSolicitada}";
+        //                 }
+
+        //                 // --------------------------------------------------------
+        //                 // START
+        //                 // --------------------------------------------------------
+
+        //                 if (
+        //                     System.Text.RegularExpressions.Regex.IsMatch(
+        //                         apiUrl,
+        //                         @"([?&])start=\d+",
+        //                         System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        //                     )
+        //                 )
+        //                 {
+        //                     apiUrl =
+        //                         System.Text.RegularExpressions.Regex.Replace(
+        //                             apiUrl,
+        //                             @"([?&])start=\d+",
+        //                             $"$1start={start}"
+        //                         );
+        //                 }
+        //                 else
+        //                 {
+        //                     apiUrl +=
+        //                         apiUrl.Contains("?")
+        //                             ? $"&start={start}"
+        //                             : $"?start={start}";
+        //                 }
+
+        //                 try
+        //                 {
+        //                     string resultadoFetch =
+        //                         await pagina.EvaluateAsync<string>(
+        //                             @"async (url) => {
+
+        //                         try
+        //                         {
+        //                             const match =
+        //                                 document.cookie.match(
+        //                                     /JSESSIONID=(?:""([^""]+)""|([^;]+))/
+        //                                 );
+
+        //                             const csrfToken =
+        //                                 match
+        //                                     ? (match[1] || match[2])
+        //                                     : '';
+
+        //                             const resposta =
+        //                                 await fetch(
+        //                                     url,
+        //                                     {
+        //                                         method: 'GET',
+
+        //                                         credentials: 'include',
+
+        //                                         headers: {
+        //                                             'Accept':
+        //                                                 'application/vnd.linkedin.normalized+json+2.1',
+
+        //                                             'X-Restli-Protocol-Version':
+        //                                                 '2.0.0',
+
+        //                                             'csrf-token':
+        //                                                 csrfToken
+        //                                         }
+        //                                     }
+        //                                 );
+
+        //                             const texto =
+        //                                 await resposta.text();
+
+        //                             return JSON.stringify({
+        //                                 status:
+        //                                     resposta.status,
+
+        //                                 ok:
+        //                                     resposta.ok,
+
+        //                                 body:
+        //                                     texto
+        //                             });
+        //                         }
+        //                         catch (erro)
+        //                         {
+        //                             return JSON.stringify({
+        //                                 status: 0,
+
+        //                                 ok: false,
+
+        //                                 body:
+        //                                     String(erro)
+        //                             });
+        //                         }
+
+        //                     }",
+        //                             apiUrl
+        //                         );
+
+        //                     using var wrapper =
+        //                         JsonDocument.Parse(
+        //                             resultadoFetch
+        //                         );
+
+        //                     var wrapperRoot =
+        //                         wrapper.RootElement;
+
+        //                     int statusHttp =
+        //                         wrapperRoot
+        //                             .GetProperty("status")
+        //                             .GetInt32();
+
+        //                     bool respostaOk =
+        //                         wrapperRoot
+        //                             .GetProperty("ok")
+        //                             .GetBoolean();
+
+        //                     string json =
+        //                         wrapperRoot
+        //                             .GetProperty("body")
+        //                             .GetString()
+        //                             ?? "";
+
+        //                     if (!respostaOk)
+        //                     {
+        //                         break;
+        //                     }
+
+        //                     int quantidadeRecebida =
+        //                         0;
+
+        //                     using (
+        //                         var documento =
+        //                             JsonDocument.Parse(json)
+        //                     )
+        //                     {
+        //                         var raiz =
+        //                             documento.RootElement;
+
+        //                         JsonElement dados =
+        //                             raiz.TryGetProperty(
+        //                                 "data",
+        //                                 out var dataElement
+        //                             )
+        //                                 ? dataElement
+        //                                 : raiz;
+
+        //                         if (
+        //                             dados.TryGetProperty(
+        //                                 "elements",
+        //                                 out var elements
+        //                             )
+        //                         )
+        //                         {
+        //                             quantidadeRecebida =
+        //                                 elements.GetArrayLength();
+        //                         }
+
+        //                         if (
+        //                             dados.TryGetProperty(
+        //                                 "paging",
+        //                                 out var paging
+        //                             )
+        //                             &&
+        //                             paging.TryGetProperty(
+        //                                 "count",
+        //                                 out var countElement
+        //                             )
+        //                         )
+        //                         {
+        //                             quantidadeRecebida =
+        //                                 countElement.GetInt32();
+        //                         }
+        //                     }
+
+        //                     int novos =
+        //                         ProcessarResposta(
+        //                             json,
+        //                             false
+        //                         );
+
+        //                     Console.WriteLine(
+        //             $"ProcessarResposta PAGINAÇÃO: {novos} novos | Total acumulado: {vagasPorId.Count}");
+
+        //                     if (novos == 0)
+        //                     {
+        //                         semNovidade++;
+        //                     }
+        //                     else
+        //                     {
+        //                         semNovidade = 0;
+        //                     }
+
+        //                     if (
+        //                         quantidadeRecebida <= 0
+        //                     )
+        //                     {
+        //                         break;
+        //                     }
+
+        //                     start += quantidadeRecebida;
+
+        //                     if (semNovidade >= 3)
+        //                     {
+        //                         break;
+        //                     }
+
+        //                     if (
+        //                         totalResultados > 0
+        //                         &&
+        //                         start >= totalResultados
+        //                     )
+        //                     {
+        //                         break;
+        //                     }
+        //                 }
+        //                 catch
+        //                 {
+        //                     break;
+        //                 }
+        //             }
+
+        //             // ============================================================
+        //             // 7. ENRIQUECE AS VAGAS VISÍVEIS
+        //             // ============================================================
+
+        //             try
+        //             {
+        //                 string jsonVisiveis =
+        //                     await pagina.EvaluateAsync<string>(
+        //                         @"() => {
+
+        //                     const cards = [
+        //                         ...document.querySelectorAll(
+        //                             'li[data-occludable-job-id]'
+        //                         )
+        //                     ];
+
+        //                     return JSON.stringify(
+        //                         cards.map(card => {
+
+        //                             const container =
+        //                                 card.querySelector(
+        //                                     'div[data-job-id]'
+        //                                 );
+
+        //                             const id =
+        //                                 container?.getAttribute(
+        //                                     'data-job-id'
+        //                                 )
+        //                                 ||
+        //                                 card.getAttribute(
+        //                                     'data-occludable-job-id'
+        //                                 )
+        //                                 ||
+        //                                 '';
+
+        //                             const time =
+        //                                 card.querySelector(
+        //                                     'time'
+        //                                 )?.innerText
+        //                                 ||
+        //                                 '';
+
+        //                             const status =
+        //                                 card.querySelector(
+        //                                     '.job-card-container__footer-job-state'
+        //                                 )?.innerText
+        //                                 ||
+        //                                 '';
+
+        //                             return {
+        //                                 id,
+        //                                 time,
+        //                                 status
+        //                             };
+        //                         })
+        //                     );
+        //                 }"
+        //                     );
+
+        //                 using var documentoVisiveis =
+        //                     JsonDocument.Parse(
+        //                         jsonVisiveis
+        //                     );
+
+        //                 foreach (
+        //                     var item
+        //                     in documentoVisiveis.RootElement.EnumerateArray()
+        //                 )
+        //                 {
+        //                     string id =
+        //                         item.TryGetProperty(
+        //                             "id",
+        //                             out var idElement
+        //                         )
+        //                             ? idElement.GetString() ?? ""
+        //                             : "";
+
+        //                     if (
+        //                         string.IsNullOrWhiteSpace(id)
+        //                     )
+        //                     {
+        //                         continue;
+        //                     }
+
+        //                     if (
+        //                         !vagasPorId.TryGetValue(
+        //                             id,
+        //                             out var vaga
+        //                         )
+        //                     )
+        //                     {
+        //                         continue;
+        //                     }
+
+        //                     string publicacao =
+        //                         item.TryGetProperty(
+        //                             "time",
+        //                             out var timeElement
+        //                         )
+        //                             ? timeElement.GetString() ?? ""
+        //                             : "";
+
+        //                     string status =
+        //                         item.TryGetProperty(
+        //                             "status",
+        //                             out var statusElement
+        //                         )
+        //                             ? statusElement.GetString() ?? ""
+        //                             : "";
+
+        //                     if (
+        //                         !string.IsNullOrWhiteSpace(
+        //                             publicacao
+        //                         )
+        //                     )
+        //                     {
+        //                         vaga.Publicacao =
+        //                             publicacao.Trim();
+        //                     }
+
+        //                     if (
+        //                         !string.IsNullOrWhiteSpace(
+        //                             status
+        //                         )
+        //                     )
+        //                     {
+        //                         vaga.StatusLinkedIn =
+        //                             status.Trim();
+        //                     }
+        //                 }
+        //             }
+        //             catch
+        //             {
+        //             }
+
+        //             // ============================================================
+        //             // 8. RESULTADO FINAL
+        //             // ============================================================
+
+        //             var resultadoFinal =
+        //             vagasPorId.Values.ToList();
+
+        //             Console.WriteLine(
+        //                 $"RESULTADO FINAL BuscarVagasAsync: {resultadoFinal.Count} vagas"
+        //             );
+
+        //             return resultadoFinal;
+        //             // return vagasPorId.Values.ToList();
+        //         }
 
         public async Task<List<VagaLinkedIn>> BuscarVagasAsync(
-            string termo,
-            string? localizacao,
-            string? periodo)
+     string termo,
+     string? localizacao,
+     string? periodo)
         {
+            Console.WriteLine("========== ENTROU NO BuscarVagasAsync ==========");
+
             var pagina = await ObterPaginaAsync();
 
-            var vagasPorId =
-                new Dictionary<string, VagaLinkedIn>();
+            var vagasPorId = new Dictionary<string, VagaLinkedIn>();
 
             // ============================================================
             // PERÍODO
@@ -926,23 +2411,7 @@ namespace JobApply.Services
                     _ => "r86400"
                 };
 
-            const string geoIdSaoPaulo =
-                "105871508";
-
-            const int quantidadeSolicitada =
-                7;
-
-            const int maxRequisicoes =
-                50;
-
-            Console.WriteLine();
-            Console.WriteLine("==========================================");
-            Console.WriteLine("       INICIANDO BUSCA NO LINKEDIN");
-            Console.WriteLine("==========================================");
-            Console.WriteLine($"TERMO: [{termo}]");
-            Console.WriteLine($"LOCALIZAÇÃO: [{localizacao}]");
-            Console.WriteLine($"PERÍODO: [{periodo}]");
-            Console.WriteLine($"FILTRO LINKEDIN: [{periodoFiltro}]");
+            const string geoIdSaoPaulo = "105871508";
 
             // ============================================================
             // NORMALIZAÇÃO
@@ -982,14 +2451,10 @@ namespace JobApply.Services
                 string texto,
                 string expressao)
             {
-                string textoNormalizado =
-                    Normalizar(texto);
+                string textoNormalizado = Normalizar(texto);
+                string expressaoNormalizada = Normalizar(expressao);
 
-                string expressaoNormalizada =
-                    Normalizar(expressao);
-
-                if (string.IsNullOrWhiteSpace(
-                    expressaoNormalizada))
+                if (string.IsNullOrWhiteSpace(expressaoNormalizada))
                 {
                     return false;
                 }
@@ -1113,84 +2578,6 @@ namespace JobApply.Services
         "governança de dados"
     };
 
-            // ============================================================
-            // TERMOS CLARAMENTE FORA DE TI
-            // ============================================================
-
-            var termosForaTI = new[]
-            {
-        "logística",
-        "logistica",
-        "delivery",
-
-        "recepcionista",
-        "recepção",
-        "recepcao",
-
-        "atendente",
-        "atendimento",
-
-        "administrativo",
-        "administrativa",
-        "administração",
-        "administracao",
-
-        "estoque",
-        "almoxarifado",
-
-        "financeiro",
-        "finanças",
-        "financas",
-        "contabilidade",
-        "contábil",
-        "contabil",
-
-        "marketing",
-
-        "vendas",
-        "vendedor",
-        "vendedora",
-        "comercial",
-        "business development",
-
-        "recursos humanos",
-        "rh",
-        "recrutamento",
-
-        "jurídico",
-        "juridico",
-        "advocacia",
-
-        "compras",
-        "procurement",
-
-        "motorista",
-
-        "enfermagem",
-        "farmácia",
-        "farmacia",
-
-        "meio ambiente",
-
-        "engenharia civil",
-        "engenharia mecânica",
-        "engenharia mecanica",
-        "engenharia elétrica",
-        "engenharia eletrica",
-
-        "facilities",
-
-        "legal operations",
-
-        "accounting",
-        "accountant",
-
-        "merchandising",
-
-        "jovem aprendiz",
-        "aprendiz administrativo"
-    };
-
             bool buscaTI =
                 Normalizar(termo).Contains("estagio")
                 ||
@@ -1199,88 +2586,26 @@ namespace JobApply.Services
                 );
 
             // ============================================================
-            // 1. ABRE A PÁGINA NORMAL DO LINKEDIN
+            // URL DA PESQUISA
             // ============================================================
 
             string buscaUrl =
-                "https://www.linkedin.com/jobs/search/?" +
-                $"keywords={Uri.EscapeDataString(termo)}" +
-                $"&location={Uri.EscapeDataString(localizacao ?? "São Paulo")}" +
+                "https://www.linkedin.com/jobs/search-results/?" +
+                $"keywords={Uri.EscapeDataString(termo).Replace("%20", "+")}" +
+                $"&origin=JOB_SEARCH_PAGE_JOB_FILTER" +
                 $"&geoId={geoIdSaoPaulo}" +
                 $"&distance=0.0" +
                 $"&f_TPR={periodoFiltro}";
 
-            Console.WriteLine();
-            Console.WriteLine("ABRINDO BUSCA:");
+            Console.WriteLine(
+                "========== URL DA BUSCA =========="
+            );
+
             Console.WriteLine(buscaUrl);
 
-            pagina.Request += (_, request) =>
-{
-    if (
-        request.Url.Contains(
-            "voyagerJobsDashJobCards",
-            StringComparison.OrdinalIgnoreCase
-        )
-    )
-    {
-        Console.WriteLine();
-        Console.WriteLine("================================================");
-        Console.WriteLine("JOB SEARCH REQUEST REAL DO LINKEDIN");
-        Console.WriteLine("================================================");
-        Console.WriteLine(request.Url);
-        Console.WriteLine("================================================");
-    }
-};
-
-            pagina.Response += (_, response) =>
-            {
-                if (
-                    response.Url.Contains(
-                        "voyagerJobsDashJobCards",
-                        StringComparison.OrdinalIgnoreCase
-                    )
-                )
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("================================================");
-                    Console.WriteLine("JOB SEARCH RESPONSE REAL DO LINKEDIN");
-                    Console.WriteLine("STATUS: " + response.Status);
-                    Console.WriteLine(response.Url);
-                    Console.WriteLine("================================================");
-                }
-            };
-
-            string? endpointBuscaReal = null;
-
-            pagina.Request += (_, request) =>
-            {
-                if (
-                    request.Url.Contains(
-                        "/voyager/api/voyagerJobsDashJobCards",
-                        StringComparison.OrdinalIgnoreCase
-                    )
-                    &&
-                    request.Url.Contains(
-                        "JobSearchCardsCollection-",
-                        StringComparison.OrdinalIgnoreCase
-                    )
-                    &&
-                    !request.Url.Contains(
-                        "JobSearchCardsCollectionLite-",
-                        StringComparison.OrdinalIgnoreCase
-                    )
-                )
-                {
-                    endpointBuscaReal = request.Url;
-
-                    Console.WriteLine();
-                    Console.WriteLine("================================================");
-                    Console.WriteLine("ENDPOINT REAL DA PESQUISA DO LINKEDIN");
-                    Console.WriteLine("================================================");
-                    Console.WriteLine(endpointBuscaReal);
-                    Console.WriteLine("================================================");
-                }
-            };
+            // ============================================================
+            // ABRE O LINKEDIN
+            // ============================================================
 
             try
             {
@@ -1288,1008 +2613,653 @@ namespace JobApply.Services
                     buscaUrl,
                     new PageGotoOptions
                     {
-                        WaitUntil =
-                            WaitUntilState.DOMContentLoaded,
-
-                        Timeout = 30000
+                        WaitUntil = WaitUntilState.DOMContentLoaded,
+                        Timeout = 60000
                     }
                 );
 
-                Console.WriteLine();
-                Console.WriteLine("URL FINAL DO LINKEDIN:");
-                Console.WriteLine(pagina.Url);
+                Console.WriteLine(
+                    "========== GOTO FINALIZADO =========="
+                );
 
+                Console.WriteLine(
+                    $"URL ATUAL: {pagina.Url}"
+                );
+
+                // ============================================================
+                // DIAGNÓSTICO DA PÁGINA ABERTA PELO PLAYWRIGHT
+                // ============================================================
+
+                Console.WriteLine("========== DIAGNÓSTICO PLAYWRIGHT ==========");
+
+                try
+                {
+                    string tituloPagina =
+                        await pagina.TitleAsync();
+
+                    Console.WriteLine(
+                        $"TÍTULO DA PÁGINA: {tituloPagina}"
+                    );
+
+                    string textoPagina =
+                        await pagina.Locator("body").InnerTextAsync();
+
+                    Console.WriteLine(
+                        $"TAMANHO DO TEXTO DA PÁGINA: {textoPagina.Length} caracteres"
+                    );
+
+                    string htmlPagina =
+                        await pagina.ContentAsync();
+
+                    string caminhoHtml =
+                        Path.Combine(
+                            AppContext.BaseDirectory,
+                            "linkedin-debug.html"
+                        );
+
+                    await File.WriteAllTextAsync(
+                        caminhoHtml,
+                        htmlPagina
+                    );
+
+                    string caminhoImagem =
+                        Path.Combine(
+                            AppContext.BaseDirectory,
+                            "linkedin-debug.png"
+                        );
+
+                    await pagina.ScreenshotAsync(
+                        new PageScreenshotOptions
+                        {
+                            Path = caminhoImagem,
+                            FullPage = true
+                        }
+                    );
+
+                    Console.WriteLine(
+                        $"HTML salvo em: {caminhoHtml}"
+                    );
+
+                    Console.WriteLine(
+                        $"IMAGEM salva em: {caminhoImagem}"
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"ERRO NO DIAGNÓSTICO: {ex.Message}"
+                    );
+                }
+
+                Console.WriteLine(
+                    "========== FIM DO DIAGNÓSTICO =========="
+                );
             }
             catch (Exception ex)
             {
                 Console.WriteLine(
-                    $"Aviso na navegação: {ex.Message}"
+                    $"AVISO NO GOTO: {ex.Message}"
                 );
             }
 
-            await pagina.WaitForTimeoutAsync(1200);
-
             // ============================================================
-            // 2. DESCOBRE O DATALET DO LINKEDIN
+            // NÃO USAR NETWORK IDLE NO LINKEDIN
             // ============================================================
 
+            Console.WriteLine(
+                "AGUARDANDO O LINKEDIN RENDERIZAR..."
+            );
 
+            await pagina.WaitForTimeoutAsync(4000);
 
-            string? endpoint =
-                null;
+            // ============================================================
+            // LOCALIZA OS CARDS
+            // ============================================================
 
-            string? bodyId =
-                null;
+            // ============================================================
+            // LOCALIZA OS CARDS - LINKEDIN
+            // ============================================================
 
-            var datalets =
-                pagina.Locator(
-                    "code[id^='datalet-bpr-guid-']"
+            var cards = pagina.Locator(
+                "div[role='button'][componentkey^='job-card-component-ref-']"
+            );
+
+            int quantidadeCards = await cards.CountAsync();
+
+            Console.WriteLine(
+                $"CARDS [componentkey]: {quantidadeCards}"
+            );
+
+            // ============================================================
+            // FALLBACK 1
+            // ============================================================
+
+            if (quantidadeCards == 0)
+            {
+                cards = pagina.Locator(
+                    "li[data-occludable-job-id]"
                 );
 
-            int quantidadeDatalets =
-                await datalets.CountAsync();
+                quantidadeCards = await cards.CountAsync();
 
-            for (
-                int i = 0;
-                i < quantidadeDatalets;
-                i++)
-            {
-                try
-                {
-                    string texto =
-                        await datalets
-                            .Nth(i)
-                            .InnerTextAsync();
-
-                    if (
-                        !texto.Contains(
-                            "voyagerJobsDashJobCards",
-                            StringComparison.OrdinalIgnoreCase
-                        )
-                    )
-                    {
-                        continue;
-                    }
-
-                    using var metaJson =
-                        JsonDocument.Parse(texto);
-
-                    var root =
-                        metaJson.RootElement;
-
-                    if (
-                        root.TryGetProperty(
-                            "request",
-                            out var requestElement
-                        )
-                    )
-                    {
-                        endpoint =
-                            requestElement.GetString();
-                    }
-
-                    if (
-                        root.TryGetProperty(
-                            "body",
-                            out var bodyElement
-                        )
-                    )
-                    {
-                        bodyId =
-                            bodyElement.GetString();
-                    }
-
-                    break;
-                }
-                catch
-                {
-                }
-            }
-
-            if (
-                string.IsNullOrWhiteSpace(endpoint) ||
-                string.IsNullOrWhiteSpace(bodyId)
-            )
-            {
-                Console.WriteLine();
                 Console.WriteLine(
-                    "ERRO: não foi possível localizar " +
-                    "o endpoint voyagerJobsDashJobCards."
+                    $"CARDS [data-occludable-job-id]: {quantidadeCards}"
+                );
+            }
+
+            // ============================================================
+            // FALLBACK 2
+            // ============================================================
+
+            if (quantidadeCards == 0)
+            {
+                cards = pagina.Locator(
+                    "li[data-job-id]"
+                );
+
+                quantidadeCards = await cards.CountAsync();
+
+                Console.WriteLine(
+                    $"CARDS [data-job-id]: {quantidadeCards}"
+                );
+            }
+
+            // ============================================================
+            // FALLBACK 3
+            // ============================================================
+
+            if (quantidadeCards == 0)
+            {
+                cards = pagina.Locator(
+                    "li.jobs-search-results__list-item"
+                );
+
+                quantidadeCards = await cards.CountAsync();
+
+                Console.WriteLine(
+                    $"CARDS [jobs-search-results__list-item]: {quantidadeCards}"
+                );
+            }
+
+            // ============================================================
+            // VALIDAÇÃO
+            // ============================================================
+
+            if (quantidadeCards == 0)
+            {
+                Console.WriteLine(
+                    "NENHUM CARD ENCONTRADO NO DOM."
                 );
 
                 return new List<VagaLinkedIn>();
             }
 
-            Console.WriteLine();
-            Console.WriteLine("==========================================");
-            Console.WriteLine("ENDPOINT ORIGINAL DO DATALET:");
-            Console.WriteLine(endpoint);
-            Console.WriteLine("==========================================");
-
-            Console.WriteLine();
-            Console.WriteLine("BODY ID:");
-            Console.WriteLine(bodyId);
-
-            string endpointBase =
-                new Uri(
-                    new Uri("https://www.linkedin.com"),
-                    endpoint
-                ).ToString();
-
-            Console.WriteLine();
-            Console.WriteLine("ENDPOINT BASE ORIGINAL:");
-            Console.WriteLine(endpointBase);
-
-
             // ============================================================
-            // ALINHA A ORIGEM
-            // ============================================================
+            // LÊ AS PÁGINAS DO LINKEDIN
+            // ============================================================           
 
-            // endpointBase =
-            //     endpointBase.Replace(
-            //         "origin:JOB_SEARCH_PAGE_OTHER_ENTRY",
-            //         "origin:JOB_SEARCH_PAGE_JOB_FILTER",
-            //         StringComparison.Ordinal
-            //     );
+            const int maxPaginas = 20;
 
-            // endpointBase =
-            //     endpointBase.Replace(
-            //         "origin%3AJOB_SEARCH_PAGE_OTHER_ENTRY",
-            //         "origin%3AJOB_SEARCH_PAGE_JOB_FILTER",
-            //         StringComparison.OrdinalIgnoreCase
-            //     );
-
-            Console.WriteLine();
-            Console.WriteLine(
-                "ENDPOINT INTERNO DO LINKEDIN:"
-            );
-            //Console.WriteLine(endpointBase);
-
-            // ============================================================
-            // 3. FUNÇÃO PARA PEGAR ID DO URN
-            // ============================================================
-
-            string ExtrairId(string? urn)
+            for (int paginaAtual = 1; paginaAtual <= maxPaginas; paginaAtual++)
             {
-                if (string.IsNullOrWhiteSpace(urn))
-                    return "";
-
-                var match =
-                    System.Text.RegularExpressions.Regex.Match(
-                        urn,
-                        @"\((\d+),"
-                    );
-
-                if (match.Success)
-                {
-                    return match.Groups[1].Value;
-                }
-
-                match =
-                    System.Text.RegularExpressions.Regex.Match(
-                        urn,
-                        @":(\d+)$"
-                    );
-
-                if (match.Success)
-                {
-                    return match.Groups[1].Value;
-                }
-
-                return "";
-            }
-
-            // ============================================================
-            // 4. PROCESSA UMA RESPOSTA
-            // ============================================================
-
-            int totalResultados =
-                0;
-
-            int ProcessarResposta(
-                string json,
-                bool exibirLog)
-            {
-                int novos =
-                    0;
-
-                using var documento =
-                    JsonDocument.Parse(json);
-
-                var raiz =
-                    documento.RootElement;
-
-                JsonElement dados;
-
-                if (
-                    raiz.TryGetProperty(
-                        "data",
-                        out var dataElement
-                    )
-                )
-                {
-                    dados = dataElement;
-                }
-                else
-                {
-                    dados = raiz;
-                }
-
-                // --------------------------------------------------------
-                // PAGINAÇÃO
-                // --------------------------------------------------------
-
-                int paginaTotal =
-                    0;
-
-                if (
-                    dados.TryGetProperty(
-                        "paging",
-                        out var paging
-                    )
-                )
-                {
-                    if (
-                        paging.TryGetProperty(
-                            "total",
-                            out var totalElement
-                        )
-                    )
-                    {
-                        paginaTotal =
-                            totalElement.GetInt32();
-                    }
-                }
+                Console.WriteLine(
+                    $"========== PROCESSANDO PÁGINA {paginaAtual} =========="
+                );
 
                 Console.WriteLine(
-    $"PAGING COMPLETO: {paging.GetRawText()}"
-);
+                    $"PÁGINA {paginaAtual}: {quantidadeCards} cards"
+                );
 
-                if (paginaTotal > 0)
+                for (int i = 0; i < quantidadeCards; i++)
                 {
-                    totalResultados =
-                        paginaTotal;
-                }
+                    var card = cards.Nth(i);
 
-                // --------------------------------------------------------
-                // ELEMENTS
-                // --------------------------------------------------------
+                    string id = "";
 
-                if (
-                    !dados.TryGetProperty(
-                        "elements",
-                        out var elements
-                    )
-                )
-                {
-                    return 0;
-                }
-
-                // --------------------------------------------------------
-                // INDEXA JOB POSTING CARDS
-                // --------------------------------------------------------
-
-                var cards =
-                    new Dictionary<string, JsonElement>();
-
-                if (
-                    raiz.TryGetProperty(
-                        "included",
-                        out var included
-                    )
-                    &&
-                    included.ValueKind ==
-                        JsonValueKind.Array
-                )
-                {
-                    foreach (
-                        var item
-                        in included.EnumerateArray()
-                    )
-                    {
-                        if (
-                            !item.TryGetProperty(
-                                "$type",
-                                out var typeElement
-                            )
-                        )
-                        {
-                            continue;
-                        }
-
-                        string tipo =
-                            typeElement.GetString() ?? "";
-
-                        if (
-                            !tipo.EndsWith(
-                                "JobPostingCard",
-                                StringComparison.Ordinal
-                            )
-                        )
-                        {
-                            continue;
-                        }
-
-                        string id =
-                            "";
-
-                        if (
-                            item.TryGetProperty(
-                                "jobPostingUrn",
-                                out var jobUrnElement
-                            )
-                        )
-                        {
-                            id =
-                                ExtrairId(
-                                    jobUrnElement.GetString()
-                                );
-                        }
-
-                        if (
-                            string.IsNullOrWhiteSpace(id)
-                            &&
-                            item.TryGetProperty(
-                                "entityUrn",
-                                out var entityElement
-                            )
-                        )
-                        {
-                            id =
-                                ExtrairId(
-                                    entityElement.GetString()
-                                );
-                        }
-
-                        if (
-                            !string.IsNullOrWhiteSpace(id)
-                        )
-                        {
-                            cards[id] =
-                                item;
-                        }
-                    }
-                }
-
-                // --------------------------------------------------------
-                // PROCESSA ELEMENTS
-                // --------------------------------------------------------
-
-                foreach (
-                    var element
-                    in elements.EnumerateArray()
-                )
-                {
                     try
                     {
-                        if (
-                            !element.TryGetProperty(
-                                "jobCardUnion",
-                                out var unionElement
-                            )
-                        )
+                        string componentKey =
+                            await card.GetAttributeAsync("componentkey")
+                            ?? "";
+
+                        if (!string.IsNullOrWhiteSpace(componentKey))
                         {
-                            continue;
+                            var match =
+                                Regex.Match(
+                                    componentKey,
+                                    @"job-card-component-ref-(\d+)"
+                                );
+
+                            if (match.Success)
+                            {
+                                id = match.Groups[1].Value;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    if (string.IsNullOrWhiteSpace(id))
+                    {
+                        try
+                        {
+                            id =
+                                await card.GetAttributeAsync(
+                                    "data-occludable-job-id"
+                                ) ?? "";
+                        }
+                        catch
+                        {
+                        }
+                    }
+
+                    if (string.IsNullOrWhiteSpace(id))
+                    {
+                        try
+                        {
+                            id =
+                                await card.GetAttributeAsync(
+                                    "data-job-id"
+                                ) ?? "";
+                        }
+                        catch
+                        {
+                        }
+                    }
+
+                    string link = "";
+
+                    try
+                    {
+                        var linkElement =
+                            card.Locator(
+                                "a[href*='/jobs/view/']"
+                            ).First;
+
+                        if (await linkElement.CountAsync() > 0)
+                        {
+                            link =
+                                await linkElement.GetAttributeAsync(
+                                    "href"
+                                ) ?? "";
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(link))
+                    {
+                        var match =
+                            Regex.Match(
+                                link,
+                                @"/jobs/view/(\d+)"
+                            );
+
+                        if (match.Success &&
+                            string.IsNullOrWhiteSpace(id))
+                        {
+                            id = match.Groups[1].Value;
                         }
 
-                        if (
-                            !unionElement.TryGetProperty(
-                                "*jobPostingCard",
-                                out var cardUrnElement
-                            )
-                        )
+                        if (link.StartsWith("/"))
                         {
-                            continue;
+                            link =
+                                "https://www.linkedin.com" +
+                                link;
                         }
+                    }
 
-                        string cardUrn =
-                            cardUrnElement.GetString() ?? "";
+                    if (string.IsNullOrWhiteSpace(id))
+                    {
+                        continue;
+                    }
 
-                        string id =
-                            ExtrairId(cardUrn);
+                    if (string.IsNullOrWhiteSpace(link))
+                    {
+                        link =
+                            $"https://www.linkedin.com/jobs/view/{id}/";
+                    }
 
-                        if (
-                            string.IsNullOrWhiteSpace(id)
-                            ||
-                            vagasPorId.ContainsKey(id)
-                        )
-                        {
-                            continue;
-                        }
+                    string titulo = "";
 
-                        if (
-                            !cards.TryGetValue(
-                                id,
-                                out var card
-                            )
-                        )
-                        {
-                            continue;
-                        }
+                    try
+                    {
+                        var tituloElement =
+                            card.Locator(
+                                ".job-card-list__title, " +
+                                ".artdeco-entity-lockup__title, " +
+                                "a[aria-label]"
+                            ).First;
 
-                        // ------------------------------------------------
-                        // TÍTULO
-                        // ------------------------------------------------
-
-                        string titulo =
-                            "";
-
-                        if (
-                            card.TryGetProperty(
-                                "jobPostingTitle",
-                                out var jobTitleElement
-                            )
-                        )
+                        if (await tituloElement.CountAsync() > 0)
                         {
                             titulo =
-                                jobTitleElement.GetString() ?? "";
+                                (
+                                    await tituloElement.InnerTextAsync()
+                                ).Trim();
                         }
 
-                        if (
-                            string.IsNullOrWhiteSpace(titulo)
-                            &&
-                            card.TryGetProperty(
-                                "title",
-                                out var titleElement
-                            )
-                        )
+                        if (string.IsNullOrWhiteSpace(titulo))
                         {
-                            if (
-                                titleElement.TryGetProperty(
-                                    "text",
-                                    out var textElement
-                                )
-                            )
-                            {
-                                titulo =
-                                    textElement.GetString() ?? "";
-                            }
+                            string textoCard =
+                                await card.InnerTextAsync();
 
-                            if (
-                                string.IsNullOrWhiteSpace(titulo)
-                                &&
-                                titleElement.TryGetProperty(
-                                    "accessibilityText",
-                                    out var accessibilityElement
-                                )
-                            )
-                            {
-                                titulo =
-                                    accessibilityElement.GetString()
+                            titulo =
+                                textoCard
+                                    .Split(
+                                        '\n',
+                                        StringSplitOptions.RemoveEmptyEntries
+                                    )
+                                    .Select(
+                                        linha => linha.Trim()
+                                    )
+                                    .FirstOrDefault(
+                                        linha =>
+                                            !string.IsNullOrWhiteSpace(
+                                                linha
+                                            )
+                                    )
                                     ?? "";
-                            }
-                        }
-
-                        titulo =
-                            titulo
-                                .Replace(
-                                    "with verification",
-                                    "",
-                                    StringComparison.OrdinalIgnoreCase
-                                )
-                                .Trim();
-
-                        if (
-                            string.IsNullOrWhiteSpace(titulo)
-                        )
-                        {
-                            continue;
-                        }
-
-                        // ------------------------------------------------
-                        // EMPRESA
-                        // ------------------------------------------------
-
-                        string empresa =
-                            "";
-
-                        if (
-                            card.TryGetProperty(
-                                "primaryDescription",
-                                out var primaryElement
-                            )
-                            &&
-                            primaryElement.TryGetProperty(
-                                "text",
-                                out var primaryText
-                            )
-                        )
-                        {
-                            empresa =
-                                primaryText.GetString() ?? "";
-                        }
-
-                        // ------------------------------------------------
-                        // LOCALIZAÇÃO
-                        // ------------------------------------------------
-
-                        string local =
-                            "";
-
-                        if (
-                            card.TryGetProperty(
-                                "secondaryDescription",
-                                out var secondaryElement
-                            )
-                            &&
-                            secondaryElement.TryGetProperty(
-                                "text",
-                                out var secondaryText
-                            )
-                        )
-                        {
-                            local =
-                                secondaryText.GetString() ?? "";
-                        }
-
-                        // ------------------------------------------------
-                        // LINK
-                        // ------------------------------------------------
-
-                        string link =
-                            $"https://www.linkedin.com/jobs/view/{id}/";
-
-                        // ------------------------------------------------
-                        // RELEVÂNCIA
-                        // ------------------------------------------------
-
-                        if (buscaTI)
-                        {
-                            string textoAnalise =
-                                            titulo;
-
-                            bool possuiTI =
-                                termosTI.Any(
-                                    termoTI =>
-                                        ContemExpressao(
-                                            textoAnalise,
-                                            termoTI
-                                        )
-                                );
-
-                            bool possuiForaTI =
-                                termosForaTI.Any(
-                                    termoForaTI =>
-                                        ContemExpressao(
-                                            textoAnalise,
-                                            termoForaTI
-                                        )
-                                );
-
-                            bool tituloGenerico =
-                                ContemExpressao(
-                                    titulo,
-                                    "estagiário"
-                                )
-                                ||
-                                ContemExpressao(
-                                    titulo,
-                                    "estagiaria"
-                                )
-                                ||
-                                ContemExpressao(
-                                    titulo,
-                                    "estágio"
-                                )
-                                ||
-                                ContemExpressao(
-                                    titulo,
-                                    "programa de estágio"
-                                );
-
-                            if (
-                                !possuiTI
-                                &&
-                                !tituloGenerico
-                            )
-                            {
-                                if (exibirLog)
-                                {
-                                    Console.WriteLine(
-                                        $"DESCARTADA: {titulo}"
-                                    );
-                                }
-
-                                continue;
-                            }
-                        }
-                        var vaga =
-                            new VagaLinkedIn
-                            {
-                                Titulo = titulo,
-                                Empresa = empresa,
-                                Localizacao = local,
-                                Link = link,
-                                Publicacao = "",
-                                StatusLinkedIn = ""
-                            };
-
-                        vagasPorId.Add(
-                            id,
-                            vaga
-                        );
-
-                        novos++;
-
-                        if (exibirLog)
-                        {
-                            Console.WriteLine(
-                                $"VAGA: {titulo} | " +
-                                $"EMPRESA: {empresa} | " +
-                                $"LOCAL: {local}"
-                            );
                         }
                     }
                     catch (Exception ex)
                     {
-                        if (exibirLog)
+                        Console.WriteLine(
+                            $"CARD {i}: ERRO AO EXTRAIR TÍTULO: {ex.Message}"
+                        );
+                    }
+
+                    if (string.IsNullOrWhiteSpace(titulo))
+                    {
+                        Console.WriteLine(
+                            $"CARD {i}: TÍTULO NÃO ENCONTRADO"
+                        );
+
+                        continue;
+                    }
+
+                    string empresa = "";
+
+                    try
+                    {
+                        var empresaElement =
+                            card.Locator("p").Nth(1);
+
+                        if (await empresaElement.CountAsync() > 0)
+                        {
+                            empresa =
+                                (
+                                    await empresaElement.InnerTextAsync()
+                                ).Trim();
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    string localizacaoVaga = "";
+
+                    try
+                    {
+                        var localizacaoElement =
+                            card.Locator("p").Nth(2);
+
+                        if (await localizacaoElement.CountAsync() > 0)
+                        {
+                            localizacaoVaga =
+                                (
+                                    await localizacaoElement.InnerTextAsync()
+                                ).Trim();
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    string publicacao = "";
+
+                    try
+                    {
+                        var timeElement =
+                            card.Locator("time").First;
+
+                        if (await timeElement.CountAsync() > 0)
+                        {
+                            publicacao =
+                                (
+                                    await timeElement.InnerTextAsync()
+                                ).Trim();
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    if (string.IsNullOrWhiteSpace(publicacao))
+                    {
+                        try
+                        {
+                            string textoCard =
+                                await card.InnerTextAsync();
+
+                            publicacao =
+                                textoCard
+                                    .Split(
+                                        '\n',
+                                        StringSplitOptions.RemoveEmptyEntries
+                                    )
+                                    .Select(
+                                        linha => linha.Trim()
+                                    )
+                                    .FirstOrDefault(
+                                        linha =>
+                                            linha.Contains(
+                                                "há ",
+                                                StringComparison.OrdinalIgnoreCase
+                                            )
+                                            ||
+                                            linha.Contains(
+                                                "hora",
+                                                StringComparison.OrdinalIgnoreCase
+                                            )
+                                            ||
+                                            linha.Contains(
+                                                "dia",
+                                                StringComparison.OrdinalIgnoreCase
+                                            )
+                                            ||
+                                            linha.Contains(
+                                                "semana",
+                                                StringComparison.OrdinalIgnoreCase
+                                            )
+                                    )
+                                    ?? "";
+                        }
+                        catch
+                        {
+                        }
+                    }
+
+                    string status = "";
+
+                    try
+                    {
+                        var statusElement =
+                            card.Locator(
+                                ".job-card-container__footer-job-state"
+                            ).First;
+
+                        if (await statusElement.CountAsync() > 0)
+                        {
+                            status =
+                                (
+                                    await statusElement.InnerTextAsync()
+                                ).Trim();
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    if (string.IsNullOrWhiteSpace(status))
+                    {
+                        status = "Visto";
+                    }
+
+                    if (buscaTI)
+                    {
+                        string textoAnalise =
+                            titulo + " " +
+                            empresa;
+
+                        bool possuiTI =
+                            termosTI.Any(
+                                termoTI =>
+                                    ContemExpressao(
+                                        textoAnalise,
+                                        termoTI
+                                    )
+                            );
+
+                        bool tituloGenerico =
+                            ContemExpressao(
+                                titulo,
+                                "estagiário"
+                            )
+                            ||
+                            ContemExpressao(
+                                titulo,
+                                "estagiaria"
+                            )
+                            ||
+                            ContemExpressao(
+                                titulo,
+                                "estágio"
+                            )
+                            ||
+                            ContemExpressao(
+                                titulo,
+                                "programa de estágio"
+                            );
+
+                        if (!possuiTI && !tituloGenerico)
                         {
                             Console.WriteLine(
-                                $"Erro ao processar vaga: " +
-                                $"{ex.Message}"
+                                $"IGNORADA PELO FILTRO TI: {titulo}"
                             );
+
+                            continue;
                         }
                     }
+
+                    if (vagasPorId.ContainsKey(id))
+                    {
+                        continue;
+                    }
+
+                    vagasPorId.Add(
+                        id,
+                        new VagaLinkedIn
+                        {
+                            Titulo = titulo,
+                            Empresa = empresa,
+                            Localizacao = localizacaoVaga,
+                            Link = link,
+                            Publicacao = publicacao,
+                            StatusLinkedIn = status
+                        }
+                    );
+
+                    Console.WriteLine(
+                        $"VAGA: {titulo} | " +
+                        $"EMPRESA: {empresa} | " +
+                        $"LOCAL: {localizacaoVaga} | " +
+                        $"PUBLICAÇÃO: {publicacao} | " +
+                        $"STATUS: {status}"
+                    );
                 }
 
-                return novos;
-            }
+                if (paginaAtual >= maxPaginas)
+                {
+                    Console.WriteLine(
+                        $"LIMITE MÁXIMO DE {maxPaginas} PÁGINAS ATINGIDO."
+                    );
 
-            // ============================================================
-            // 5. PROCESSA O PRIMEIRO BODY SSR
-            // ============================================================
+                    break;
+                }
 
-            try
-            {
-                var bodyLocator =
+                int proximaPaginaNumero =
+                    paginaAtual + 1;
+
+                var paginaProxima =
                     pagina.Locator(
-                        $"code[id='{bodyId}']"
+                        $"[aria-label='Página {proximaPaginaNumero}']"
                     );
 
-                if (
-                    await bodyLocator.CountAsync() > 0
-                )
+                if (await paginaProxima.CountAsync() == 0)
                 {
-                    string bodyJson =
-                        await bodyLocator
-                            .InnerTextAsync();
-
-                    int novos =
-                        ProcessarResposta(
-                            bodyJson,
-                            true
-                        );
-
-                    Console.WriteLine();
                     Console.WriteLine(
-                        $"PRIMEIRA RESPOSTA: " +
-                        $"{novos} novas vagas"
+                        $"PÁGINA {proximaPaginaNumero} NÃO ENCONTRADA. FIM DA PAGINAÇÃO."
                     );
+
+                    break;
                 }
-            }
-            catch (Exception ex)
-            {
+
                 Console.WriteLine(
-                    $"Erro ao processar resposta inicial: " +
-                    $"{ex.Message}"
-                );
-            }
-
-            // ============================================================
-            // 6. PAGINAÇÃO
-            //
-            // IMPORTANTE:
-            // A consulta agora é executada dentro da própria página
-            // do LinkedIn através de fetch().
-            //
-            // Isso evita o problema que estávamos tendo com:
-            //
-            // HTTP 403
-            // CSRF check failed
-            // ============================================================
-
-            int start =
-                0;
-
-            int requisicao =
-                0;
-
-            int semNovidade =
-                0;
-
-            while (
-                requisicao < maxRequisicoes
-                &&
-                (
-                    totalResultados == 0
-                    ||
-                    start < totalResultados
-                )
-            )
-            {
-                requisicao++;
-
-                string apiUrl =
-                    new System.Text.RegularExpressions.Regex(
-                        @"([?&])count=\d+"
-                    ).Replace(
-                        endpointBase,
-                        $"$1count={quantidadeSolicitada}",
-                        1
-                    );
-
-                apiUrl =
-                    new System.Text.RegularExpressions.Regex(
-                        @"([?&])start=\d+"
-                    ).Replace(
-                        apiUrl,
-                        $"$1start={start}",
-                        1
-                    );
-
-                Console.WriteLine();
-                Console.WriteLine("API URL COMPLETA:");
-                Console.WriteLine(apiUrl);
-                Console.WriteLine();
-
-                Console.WriteLine();
-                Console.WriteLine(
-                    $"CONSULTA API {requisicao}: " +
-                    $"start={start}"
+                    $"NAVEGANDO PARA PÁGINA {proximaPaginaNumero}..."
                 );
 
-                try
+                await paginaProxima.ClickAsync();
+
+                await pagina.WaitForTimeoutAsync(2000);
+
+                cards =
+                    pagina.Locator(
+                        "div[role='button'][componentkey^='job-card-component-ref-']"
+                    );
+
+                quantidadeCards =
+                    await cards.CountAsync();
+
+                if (quantidadeCards == 0)
                 {
-                    // --------------------------------------------------------
-                    // FAZ A REQUISIÇÃO DENTRO DA PRÓPRIA PÁGINA
-                    // DO LINKEDIN.
-                    // --------------------------------------------------------
-
-                    string resultadoFetch =
-    await pagina.EvaluateAsync<string>(
-        @"async (url) => {
-
-            try
-            {
-                // ====================================================
-                // O LinkedIn utiliza o JSESSIONID como base
-                // para validação do CSRF nas chamadas Voyager.
-                // ====================================================
-
-                const match =
-                    document.cookie.match(
-                        /JSESSIONID=(?:""([^""]+)""|([^;]+))/
-                    );
-
-                const csrfToken =
-                    match
-                        ? (match[1] || match[2])
-                        : '';
-
-                console.log(
-                    'CSRF encontrado:',
-                    csrfToken ? 'SIM' : 'NAO'
-                );
-
-                const resposta =
-                    await fetch(
-                        url,
-                        {
-                            method: 'GET',
-
-                            credentials: 'include',
-
-                            headers: {
-                                'Accept':
-                                    'application/vnd.linkedin.normalized+json+2.1',
-
-                                'X-Restli-Protocol-Version':
-                                    '2.0.0',
-
-                                'csrf-token':
-                                    csrfToken
-                            }
-                        }
-                    );
-
-                const texto =
-                    await resposta.text();
-
-                return JSON.stringify({
-                    status:
-                        resposta.status,
-
-                    ok:
-                        resposta.ok,
-
-                    body:
-                        texto
-                });
-            }
-            catch (erro)
-            {
-                return JSON.stringify({
-                    status: 0,
-
-                    ok: false,
-
-                    body:
-                        String(erro)
-                });
-            }
-
-        }",
-        apiUrl
-    );
-                    using var wrapper =
-                        JsonDocument.Parse(
-                            resultadoFetch
+                    cards =
+                        pagina.Locator(
+                            "li[data-occludable-job-id]"
                         );
 
-                    var wrapperRoot =
-                        wrapper.RootElement;
-
-                    int statusHttp =
-                        wrapperRoot
-                            .GetProperty("status")
-                            .GetInt32();
-
-                    bool respostaOk =
-                        wrapperRoot
-                            .GetProperty("ok")
-                            .GetBoolean();
-
-                    string json =
-                        wrapperRoot
-                            .GetProperty("body")
-                            .GetString()
-                            ?? "";
-
-                    Console.WriteLine(
-                        $"HTTP: {statusHttp}"
-                    );
-
-                    if (!respostaOk)
-                    {
-                        Console.WriteLine(
-                            "LinkedIn rejeitou a consulta."
-                        );
-
-                        Console.WriteLine(
-                            json.Length > 500
-                                ? json.Substring(0, 500)
-                                : json
-                        );
-
-                        break;
-                    }
-
-                    // --------------------------------------------------------
-                    // DESCOBRE QUANTOS VIERAM
-                    // --------------------------------------------------------
-
-                    int quantidadeRecebida =
-                        0;
-
-                    int novos =
-                        0;
-
-                    using (
-                        var documento =
-                            JsonDocument.Parse(
-                                json
-                            )
-                    )
-                    {
-                        var raiz =
-                            documento.RootElement;
-
-                        JsonElement dados =
-                            raiz.TryGetProperty(
-                                "data",
-                                out var dataElement
-                            )
-                                ? dataElement
-                                : raiz;
-
-                        if (
-                            dados.TryGetProperty(
-                                "elements",
-                                out var elements
-                            )
-                        )
-                        {
-                            quantidadeRecebida =
-                                elements.GetArrayLength();
-                        }
-
-                        if (
-                            dados.TryGetProperty(
-                                "paging",
-                                out var paging
-                            )
-                            &&
-                            paging.TryGetProperty(
-                                "count",
-                                out var countElement
-                            )
-                        )
-                        {
-                            quantidadeRecebida =
-                                countElement.GetInt32();
-                        }
-                    }
-
-                    novos =
-                        ProcessarResposta(
-                            json,
-                            true
-                        );
-
-                    Console.WriteLine(
-                        $"Recebidas: {quantidadeRecebida} | " +
-                        $"Novas: {novos} | " +
-                        $"Total acumulado: {vagasPorId.Count} | " +
-                        $"Total LinkedIn: {totalResultados}"
-                    );
-
-                    if (novos == 0)
-                    {
-                        semNovidade++;
-                    }
-                    else
-                    {
-                        semNovidade = 0;
-                    }
-
-                    if (
-                        quantidadeRecebida <= 0
-                    )
-                    {
-                        Console.WriteLine(
-                            "LinkedIn não retornou mais vagas."
-                        );
-
-                        break;
-                    }
-
-                    // --------------------------------------------------------
-                    // AVANÇA COM A QUANTIDADE REAL DEVOLVIDA
-                    // --------------------------------------------------------
-
-                    start += quantidadeRecebida;
-
-                    // --------------------------------------------------------
-                    // PROTEÇÃO CONTRA LOOP
-                    // --------------------------------------------------------
-
-                    if (semNovidade >= 3)
-                    {
-                        Console.WriteLine(
-                            "Três consultas sem novas vagas. " +
-                            "Finalizando."
-                        );
-
-                        break;
-                    }
-
-                    // --------------------------------------------------------
-                    // TERMINOU O TOTAL INFORMADO
-                    // --------------------------------------------------------
-
-                    if (
-                        totalResultados > 0
-                        &&
-                        start >= totalResultados
-                    )
-                    {
-                        break;
-                    }
+                    quantidadeCards =
+                        await cards.CountAsync();
                 }
-                catch (Exception ex)
+
+                if (quantidadeCards == 0)
+                {
+                    cards =
+                        pagina.Locator(
+                            "li[data-job-id]"
+                        );
+
+                    quantidadeCards =
+                        await cards.CountAsync();
+                }
+
+                if (quantidadeCards == 0)
+                {
+                    cards =
+                        pagina.Locator(
+                            "li.jobs-search-results__list-item"
+                        );
+
+                    quantidadeCards =
+                        await cards.CountAsync();
+                }
+
+                if (quantidadeCards == 0)
                 {
                     Console.WriteLine(
-                        $"Erro na consulta API: {ex.Message}"
+                        $"NENHUM CARD ENCONTRADO NA PÁGINA {proximaPaginaNumero}. FIM DA PAGINAÇÃO."
                     );
 
                     break;
@@ -2297,167 +3267,22 @@ namespace JobApply.Services
             }
 
             // ============================================================
-            // 7. ENRIQUECE AS VAGAS VISÍVEIS DA PRIMEIRA PÁGINA
-            //
-            // PUBLICAÇÃO
-            // STATUS LINKEDIN
+            // RESULTADO
             // ============================================================
 
-            try
-            {
-                string jsonVisiveis =
-                    await pagina.EvaluateAsync<string>(
-                        @"() => {
+            Console.WriteLine(
+                $"VAGAS EXTRAÍDAS DO HTML: {vagasPorId.Count}"
+            );
 
-                    const cards = [
-                        ...document.querySelectorAll(
-                            'li[data-occludable-job-id]'
-                        )
-                    ];
-
-                    return JSON.stringify(
-                        cards.map(card => {
-
-                            const container =
-                                card.querySelector(
-                                    'div[data-job-id]'
-                                );
-
-                            const id =
-                                container?.getAttribute(
-                                    'data-job-id'
-                                )
-                                ||
-                                card.getAttribute(
-                                    'data-occludable-job-id'
-                                )
-                                ||
-                                '';
-
-                            const time =
-                                card.querySelector(
-                                    'time'
-                                )?.innerText
-                                ||
-                                '';
-
-                            const status =
-                                card.querySelector(
-                                    '.job-card-container__footer-job-state'
-                                )?.innerText
-                                ||
-                                '';
-
-                            return {
-                                id,
-                                time,
-                                status
-                            };
-                        })
-                    );
-                }"
-                    );
-
-                using var documentoVisiveis =
-                    JsonDocument.Parse(
-                        jsonVisiveis
-                    );
-
-                foreach (
-                    var item
-                    in documentoVisiveis.RootElement.EnumerateArray()
-                )
-                {
-                    string id =
-                        item.TryGetProperty(
-                            "id",
-                            out var idElement
-                        )
-                            ? idElement.GetString() ?? ""
-                            : "";
-
-                    if (
-                        string.IsNullOrWhiteSpace(id)
-                    )
-                    {
-                        continue;
-                    }
-
-                    if (
-                        !vagasPorId.TryGetValue(
-                            id,
-                            out var vaga
-                        )
-                    )
-                    {
-                        continue;
-                    }
-
-                    string publicacao =
-                        item.TryGetProperty(
-                            "time",
-                            out var timeElement
-                        )
-                            ? timeElement.GetString() ?? ""
-                            : "";
-
-                    string status =
-                        item.TryGetProperty(
-                            "status",
-                            out var statusElement
-                        )
-                            ? statusElement.GetString() ?? ""
-                            : "";
-
-                    if (
-                        !string.IsNullOrWhiteSpace(
-                            publicacao
-                        )
-                    )
-                    {
-                        vaga.Publicacao =
-                            publicacao.Trim();
-                    }
-
-                    if (
-                        !string.IsNullOrWhiteSpace(
-                            status
-                        )
-                    )
-                    {
-                        vaga.StatusLinkedIn =
-                            status.Trim();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(
-                    $"Aviso ao enriquecer status/publicação: " +
-                    $"{ex.Message}"
-                );
-            }
-
-            // ============================================================
-            // 8. RESULTADO FINAL
-            // ============================================================
-
-            var resultado =
+            var resultadoFinal =
                 vagasPorId.Values.ToList();
 
-            Console.WriteLine();
-            Console.WriteLine("==========================================");
             Console.WriteLine(
-                $"TOTAL INFORMADO PELO LINKEDIN: " +
-                $"{totalResultados}"
+                $"RESULTADO FINAL BuscarVagasAsync: {resultadoFinal.Count} vagas"
             );
-            Console.WriteLine(
-                $"TOTAL DE VAGAS COLETADAS: " +
-                $"{resultado.Count}"
-            );
-            Console.WriteLine("==========================================");
 
-            return resultado;
+            return resultadoFinal;
+
         }
 
     }

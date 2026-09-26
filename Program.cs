@@ -80,7 +80,7 @@ builder.Services
         options.AccessDeniedPath = "/Login";
 
         options.ExpireTimeSpan =
-            TimeSpan.FromHours(8);
+            TimeSpan.FromHours(1);
 
         options.SlidingExpiration = true;
     })
