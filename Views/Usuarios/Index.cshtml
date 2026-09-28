@@ -4,52 +4,102 @@
     ViewData["Title"] = "Usuários";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="usuarios-page">
 
-    <div>
-        <h1 class="h3 mb-1">Usuários</h1>
-        <p class="text-muted mb-0">
-            Gerencie os usuários do JobApply.
-        </p>
+    ```
+    <!-- CABEÇALHO -->
+    <div class="usuarios-header">
+
+        <div>
+            <h1>Usuários</h1>
+
+            <p>
+                Gerencie os usuários do JobApply.
+            </p>
+        </div>
+
+        <a asp-action="Criar" class="novo-usuario-button">
+            + Novo usuário
+        </a>
+
     </div>
 
-    <a asp-action="Criar" class="btn btn-primary">
-        Novo usuário
-    </a>
 
-</div>
+    <!-- MENSAGEM -->
+    @if (TempData["Mensagem"] != null)
+    {
+        <div class="usuario-alert usuario-alert-@TempData["TipoMensagem"]">
 
-@if (TempData["Mensagem"] != null)
-{
-    <div class="alert alert-@TempData["TipoMensagem"]">
-        @TempData["Mensagem"]
-    </div>
-}
+            <div class="alert-icon">
+                ✓
+            </div>
 
-<div class="card shadow-sm">
+            <div>
+                @TempData["Mensagem"]
+            </div>
 
-    <div class="card-body p-0">
+        </div>
+    }
+
+
+    <!-- CARD PRINCIPAL -->
+    <div class="usuarios-card">
+
+        <div class="usuarios-card-header">
+
+            <div class="usuarios-card-title">
+
+                <div class="usuarios-icon">
+                    👥
+                </div>
+
+                <div>
+                    <h2>Usuários cadastrados</h2>
+
+                    <p>
+                        @Model.Count() @(Model.Count() == 1 ? "usuário cadastrado" : "usuários cadastrados")
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
 
         @if (!Model.Any())
         {
-            <div class="p-4 text-center text-muted">
-                Nenhum usuário cadastrado.
+            <div class="usuarios-empty">
+
+                <div class="empty-icon">
+                    👤
+                </div>
+
+                <h2>Nenhum usuário cadastrado</h2>
+
+                <p>
+                    Cadastre o primeiro usuário para começar.
+                </p>
+
+                <a asp-action="Criar" class="novo-usuario-button">
+                    + Novo usuário
+                </a>
+
             </div>
         }
         else
         {
-            <div class="table-responsive">
+            <div class="usuarios-table-container">
 
-                <table class="table table-hover mb-0">
+                <table class="usuarios-table">
 
-                    <thead class="table-light">
+                    <thead>
 
                         <tr>
                             <th>Nome</th>
                             <th>E-mail</th>
                             <th>Status</th>
                             <th>Data do Cadastro</th>
-                            <th class="text-end">
+                            <th class="acoes-column">
                                 Ações
                             </th>
                         </tr>
@@ -62,54 +112,92 @@
                         {
                             <tr>
 
+                                <!-- NOME -->
                                 <td>
-                                    <strong>
-                                        @usuario.Nome
-                                    </strong>
+
+                                    <div class="usuario-name">
+
+                                        <div class="usuario-avatar">
+                                            @usuario.Nome.Substring(
+                                            0,
+                                                                        Math.Min(1, usuario.Nome.Length)
+                                                                        ).ToUpper()
+                                </div>
+
+                                        <strong>
+                                            @usuario.Nome
+                                        </strong>
+
+                                    </div>
+
                                 </td>
 
+
+                                <!-- EMAIL -->
                                 <td>
-                                    @if (string.IsNullOrWhiteSpace(
-                                                                usuario.Email))
+
+                            @if (string.IsNullOrWhiteSpace(usuario.Email))
                                     {
-                                        <span class="text-muted">
+                                        <span class="usuario-muted">
                                             Não informado
                                         </span>
                                     }
                                     else
                                     {
-                                        @usuario.Email
+                                        <span class="usuario-email">
+                                            @usuario.Email
+                                        </span>
                                     }
+
                                 </td>
 
+
+                                <!-- STATUS -->
                                 <td>
+
                                     @if (usuario.Ativo)
                                     {
-                                        <span class="badge text-bg-success">
+                                        <span class="status-badge status-ativo">
+                                            <span class="status-dot"></span>
                                             Ativo
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge text-bg-secondary">
+                                        <span class="status-badge status-inativo">
+                                            <span class="status-dot"></span>
                                             Inativo
                                         </span>
                                     }
+
                                 </td>
 
+
+                                <!-- DATA -->
                                 <td>
-                                    @usuario.DataCadastro.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+
+                                    <span class="usuario-date">
+                                        @usuario.DataCadastro.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+
                                 </td>
 
-                                <td class="text-end">
 
-                                    <a asp-action="Editar" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-primary">
-                                        Editar
-                                    </a>
+                                <!-- AÇÕES -->
+                                <td class="acoes-column">
 
-                                    <a asp-action="Excluir" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-danger">
-                                        Excluir
-                                    </a>
+                                    <div class="usuario-actions">
+
+                                        <a asp-action="Editar" asp-route-id="@usuario.Id" class="usuario-action usuario-edit">
+                                            Editar
+                                        </a>
+
+                                        <a asp-action="Excluir" asp-route-id="@usuario.Id"
+                                            class="usuario-action usuario-delete">
+                                            Excluir
+                                        </a>
+
+                                    </div>
 
                                 </td>
 
@@ -124,5 +212,536 @@
         }
 
     </div>
+    ```
 
 </div>
+
+<style>
+    /* =====================================================
+       PÁGINA
+       ===================================================== */
+
+    .usuarios-page {
+        width: 100%;
+        max-width: 1500px;
+
+        margin: 0 auto;
+
+        padding: 20px 24px 50px;
+
+        box-sizing: border-box;
+    }
+
+
+    /* =====================================================
+       CABEÇALHO
+       ===================================================== */
+
+    .usuarios-header {
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 20px;
+
+        margin-bottom: 28px;
+    }
+
+    .usuarios-header h1 {
+        margin: 0;
+
+        color: #ffffff;
+
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .usuarios-header p {
+        margin: 7px 0 0;
+
+        color: #94a3b8;
+
+        font-size: 15px;
+    }
+
+
+    /* =====================================================
+       BOTÃO NOVO USUÁRIO
+       ===================================================== */
+
+    .novo-usuario-button {
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 44px;
+
+        padding: 0 20px;
+
+        border-radius: 10px;
+
+        background: linear-gradient(135deg,
+                #2563eb,
+                #4f46e5);
+
+        color: #ffffff;
+
+        text-decoration: none;
+
+        font-size: 14px;
+        font-weight: 600;
+
+        border: none;
+
+        box-shadow:
+            0 8px 20px rgba(37, 99, 235, 0.25);
+
+        transition: 0.2s ease;
+    }
+
+    .novo-usuario-button:hover {
+        color: #ffffff;
+
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 12px 25px rgba(37, 99, 235, 0.35);
+    }
+
+
+    /* =====================================================
+       ALERTA
+       ===================================================== */
+
+    .usuario-alert {
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        padding: 13px 16px;
+
+        margin-bottom: 20px;
+
+        border-radius: 12px;
+
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .usuario-alert-success {
+        background: rgba(34, 197, 94, 0.12);
+
+        border: 1px solid rgba(34, 197, 94, 0.25);
+
+        color: #bbf7d0;
+    }
+
+    .usuario-alert-danger {
+        background: rgba(239, 68, 68, 0.12);
+
+        border: 1px solid rgba(239, 68, 68, 0.25);
+
+        color: #fecaca;
+    }
+
+    .usuario-alert-warning {
+        background: rgba(245, 158, 11, 0.12);
+
+        border: 1px solid rgba(245, 158, 11, 0.25);
+
+        color: #fde68a;
+    }
+
+    .usuario-alert-info {
+        background: rgba(59, 130, 246, 0.12);
+
+        border: 1px solid rgba(59, 130, 246, 0.25);
+
+        color: #bfdbfe;
+    }
+
+    .alert-icon {
+        width: 28px;
+        height: 28px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background: rgba(255, 255, 255, 0.12);
+
+        flex-shrink: 0;
+    }
+
+
+    /* =====================================================
+       CARD
+       ===================================================== */
+
+    .usuarios-card {
+        overflow: hidden;
+
+        background: rgba(255, 255, 255, 0.97);
+
+        border-radius: 18px;
+
+        box-shadow:
+            0 20px 45px rgba(0, 0, 0, 0.18);
+    }
+
+
+    /* =====================================================
+       CABEÇALHO DO CARD
+       ===================================================== */
+
+    .usuarios-card-header {
+        padding: 22px 24px;
+
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .usuarios-card-title {
+        display: flex;
+
+        align-items: center;
+
+        gap: 14px;
+    }
+
+    .usuarios-icon {
+        width: 44px;
+        height: 44px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        background: #eff6ff;
+
+        font-size: 20px;
+    }
+
+    .usuarios-card-title h2 {
+        margin: 0;
+
+        color: #0f172a;
+
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .usuarios-card-title p {
+        margin: 4px 0 0;
+
+        color: #64748b;
+
+        font-size: 13px;
+    }
+
+
+    /* =====================================================
+       TABELA
+       ===================================================== */
+
+    .usuarios-table-container {
+        width: 100%;
+
+        overflow-x: auto;
+    }
+
+    .usuarios-table {
+        width: 100%;
+
+        border-collapse: collapse;
+
+        min-width: 800px;
+    }
+
+    .usuarios-table thead {
+        background: #f8fafc;
+    }
+
+    .usuarios-table th {
+        padding: 14px 20px;
+
+        color: #475569;
+
+        font-size: 12px;
+        font-weight: 700;
+
+        text-align: left;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.03em;
+
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .usuarios-table td {
+        padding: 17px 20px;
+
+        color: #334155;
+
+        font-size: 14px;
+
+        border-bottom: 1px solid #e2e8f0;
+
+        vertical-align: middle;
+    }
+
+    .usuarios-table tbody tr {
+        transition: 0.2s ease;
+    }
+
+    .usuarios-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .usuarios-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+
+    /* =====================================================
+       NOME
+       ===================================================== */
+
+    .usuario-name {
+        display: flex;
+
+        align-items: center;
+
+        gap: 11px;
+    }
+
+    .usuario-avatar {
+        width: 36px;
+        height: 36px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        flex-shrink: 0;
+
+        border-radius: 10px;
+
+        background: #dbeafe;
+
+        color: #1d4ed8;
+
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .usuario-name strong {
+        color: #0f172a;
+
+        font-size: 14px;
+    }
+
+
+    /* =====================================================
+       EMAIL
+       ===================================================== */
+
+    .usuario-email {
+        color: #475569;
+    }
+
+    .usuario-muted {
+        color: #94a3b8;
+
+        font-style: italic;
+    }
+
+
+    /* =====================================================
+       STATUS
+       ===================================================== */
+
+    .status-badge {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        padding: 6px 10px;
+
+        border-radius: 999px;
+
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: currentColor;
+    }
+
+    .status-ativo {
+        background: #dcfce7;
+
+        color: #166534;
+    }
+
+    .status-inativo {
+        background: #f1f5f9;
+
+        color: #64748b;
+    }
+
+
+    /* =====================================================
+       DATA
+       ===================================================== */
+
+    .usuario-date {
+        color: #64748b;
+
+        white-space: nowrap;
+    }
+
+
+    /* =====================================================
+       AÇÕES
+       ===================================================== */
+
+    .acoes-column {
+        text-align: right !important;
+    }
+
+    .usuario-actions {
+        display: flex;
+
+        justify-content: flex-end;
+
+        gap: 8px;
+    }
+
+    .usuario-action {
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 34px;
+
+        padding: 0 12px;
+
+        border-radius: 8px;
+
+        font-size: 12px;
+        font-weight: 600;
+
+        text-decoration: none;
+
+        transition: 0.2s ease;
+    }
+
+    .usuario-edit {
+        background: #eff6ff;
+
+        color: #1d4ed8;
+
+        border: 1px solid #dbeafe;
+    }
+
+    .usuario-edit:hover {
+        color: #1e40af;
+
+        background: #dbeafe;
+    }
+
+    .usuario-delete {
+        background: #fef2f2;
+
+        color: #b91c1c;
+
+        border: 1px solid #fecaca;
+    }
+
+    .usuario-delete:hover {
+        color: #991b1b;
+
+        background: #fee2e2;
+    }
+
+
+    /* =====================================================
+       ESTADO VAZIO
+       ===================================================== */
+
+    .usuarios-empty {
+        padding: 60px 25px;
+
+        text-align: center;
+    }
+
+    .empty-icon {
+        margin-bottom: 12px;
+
+        font-size: 42px;
+    }
+
+    .usuarios-empty h2 {
+        margin: 0;
+
+        color: #0f172a;
+
+        font-size: 20px;
+    }
+
+    .usuarios-empty p {
+        margin: 8px 0 22px;
+
+        color: #64748b;
+
+        font-size: 14px;
+    }
+
+
+    /* =====================================================
+       RESPONSIVO
+       ===================================================== */
+
+    @@media (max-width: 750px) {
+
+        .usuarios-page {
+            padding: 15px 14px 40px;
+        }
+
+        .usuarios-header {
+            flex-direction: column;
+
+            align-items: stretch;
+        }
+
+        .usuarios-header h1 {
+            font-size: 28px;
+        }
+
+        .novo-usuario-button {
+            width: 100%;
+        }
+
+        .usuarios-card-header {
+            padding: 18px;
+        }
+
+    }
+</style>

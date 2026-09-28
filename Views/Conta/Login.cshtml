@@ -1,255 +1,767 @@
-@model JobApply.Controllers.LoginViewModel
+@model JobApply.Models.LoginViewModel
 
 @{
-    ViewData["Title"] = "Entrar";
+    ViewData["Title"] = "Login";
 }
 
 <style>
+    /* =========================================================
+       PÁGINA
+       ========================================================= */
+
     body {
-        background: #f4f6f9;
+        margin: 0;
+        min-height: 100vh;
+
+        background:
+            radial-gradient(circle at 10% 20%,
+                rgba(37, 99, 235, 0.20),
+                transparent 30%),
+            radial-gradient(circle at 90% 80%,
+                rgba(79, 70, 229, 0.20),
+                transparent 30%),
+            #0f172a;
     }
 
+
     .login-page {
-        min-height: calc(100vh - 120px);
+        min-height: 100vh;
+
         display: flex;
+
         align-items: center;
+
         justify-content: center;
-        padding: 30px 15px;
+
+        padding: 25px;
     }
+
+
+    /* =========================================================
+       CARD PRINCIPAL
+       ========================================================= */
 
     .login-container {
         width: 100%;
+
         max-width: 980px;
+
         min-height: 560px;
-        background: #ffffff;
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.10);
+
         display: grid;
-        grid-template-columns: 1fr 1fr;
+
+        grid-template-columns:
+            1fr 1fr;
+
+        overflow: hidden;
+
+        border-radius: 24px;
+
+        background: #ffffff;
+
+        box-shadow:
+            0 30px 70px rgba(0, 0, 0, 0.35);
     }
+
+
+    /* =========================================================
+       PAINEL ESQUERDO
+       ========================================================= */
 
     .login-brand {
-        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
-        color: white;
-        padding: 55px;
+        position: relative;
+
         display: flex;
+
         flex-direction: column;
+
         justify-content: center;
+
+        padding: 60px;
+
+        overflow: hidden;
+
+        color: white;
+
+        background:
+            linear-gradient(145deg,
+                #2563eb,
+                #1d4ed8 55%,
+                #1e40af);
     }
+
+
+    .login-brand::before {
+        content: "";
+
+        position: absolute;
+
+        width: 320px;
+
+        height: 320px;
+
+        border-radius: 50%;
+
+        background:
+            rgba(255, 255, 255, 0.08);
+
+        top: -130px;
+
+        right: -120px;
+    }
+
+
+    .login-brand::after {
+        content: "";
+
+        position: absolute;
+
+        width: 220px;
+
+        height: 220px;
+
+        border-radius: 50%;
+
+        background:
+            rgba(255, 255, 255, 0.06);
+
+        bottom: -100px;
+
+        left: -80px;
+    }
+
+
+    .brand-content {
+        position: relative;
+
+        z-index: 1;
+    }
+
+
+    /* =========================================================
+       LOGO
+       ========================================================= */
 
     .brand-logo {
-        width: 64px;
-        height: 64px;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.15);
+        width: 70px;
+
+        height: 70px;
+
         display: flex;
+
         align-items: center;
+
         justify-content: center;
-        font-size: 28px;
-        font-weight: 700;
+
         margin-bottom: 28px;
-        border: 1px solid rgba(255, 255, 255, 0.20);
+
+        border-radius: 20px;
+
+        background:
+            rgba(255, 255, 255, 0.15);
+
+        font-size: 34px;
+
+        box-shadow:
+            0 10px 30px rgba(0, 0, 0, 0.12);
     }
 
-    .login-brand h1 {
-        font-size: 42px;
+
+    .brand-title {
+        margin: 0;
+
+        font-size: 44px;
+
         font-weight: 700;
-        margin-bottom: 15px;
-        letter-spacing: -1px;
+
+        letter-spacing: -1.5px;
     }
 
-    .login-brand p {
-        font-size: 17px;
-        line-height: 1.7;
-        color: rgba(255, 255, 255, 0.88);
-        max-width: 390px;
+
+    .brand-description {
+        max-width: 380px;
+
+        margin-top: 18px;
+
         margin-bottom: 0;
+
+        font-size: 16px;
+
+        line-height: 1.7;
+
+        color:
+            rgba(255, 255, 255, 0.82);
     }
 
-    .brand-line {
-        width: 55px;
-        height: 4px;
-        background: #ffffff;
-        border-radius: 10px;
-        margin: 25px 0;
+
+    /* =========================================================
+       RECURSOS
+       ========================================================= */
+
+    .brand-features {
+        margin-top: 42px;
     }
+
+
+    .brand-feature {
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        margin-bottom: 16px;
+
+        font-size: 14px;
+
+        color:
+            rgba(255, 255, 255, 0.90);
+    }
+
+
+    .feature-check {
+        width: 30px;
+
+        height: 30px;
+
+        flex-shrink: 0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background:
+            rgba(255, 255, 255, 0.15);
+
+        font-size: 13px;
+    }
+
+
+    /* =========================================================
+       ÁREA DO FORMULÁRIO
+       ========================================================= */
 
     .login-form-area {
-        padding: 55px;
         display: flex;
-        flex-direction: column;
+
+        align-items: center;
+
         justify-content: center;
+
+        padding: 60px;
     }
 
-    .login-form-area h2 {
+
+    .login-form {
+        width: 100%;
+
+        max-width: 350px;
+    }
+
+
+    /* =========================================================
+       CABEÇALHO
+       ========================================================= */
+
+    .login-header {
+        margin-bottom: 34px;
+    }
+
+
+    .login-header h2 {
+        margin: 0 0 8px;
+
+        color: #111827;
+
         font-size: 30px;
+
         font-weight: 700;
-        color: #212529;
-        margin-bottom: 8px;
+
+        letter-spacing: -0.5px;
     }
 
-    .login-subtitle {
-        color: #6c757d;
-        margin-bottom: 32px;
+
+    .login-header p {
+        margin: 0;
+
+        color: #6b7280;
+
+        font-size: 14px;
     }
+
+
+    /* =========================================================
+       ERRO
+       ========================================================= */
+
+    .login-error {
+        margin-bottom: 22px;
+
+        padding: 13px 15px;
+
+        border: 1px solid #fecaca;
+
+        border-radius: 10px;
+
+        background: #fef2f2;
+
+        color: #b91c1c;
+
+        font-size: 13px;
+    }
+
+
+    /* =========================================================
+       CAMPOS
+       ========================================================= */
+
+    .form-group {
+        margin-bottom: 22px;
+    }
+
 
     .form-label {
-        font-weight: 600;
-        color: #343a40;
+        display: block;
+
         margin-bottom: 8px;
+
+        color: #374151;
+
+        font-size: 14px;
+
+        font-weight: 600;
     }
 
-    .form-control {
-        min-height: 50px;
-        border: 1px solid #dfe3e8;
+
+    .input-container {
+        position: relative;
+    }
+
+
+    .input-icon {
+        position: absolute;
+
+        left: 15px;
+
+        top: 50%;
+
+        transform:
+            translateY(-50%);
+
+        color: #9ca3af;
+
+        font-size: 16px;
+
+        pointer-events: none;
+    }
+
+
+    .login-input {
+        width: 100%;
+        max-width: 100%;
+
+        height: 52px;
+
+        padding: 0 16px 0 45px;
+
+        border:
+            1px solid #d1d5db;
+
         border-radius: 12px;
-        padding: 12px 15px;
-        transition: all 0.2s ease;
-        box-shadow: none;
+
+        outline: none;
+
+        background: #f9fafb;
+
+        color: #111827;
+
+        font-size: 15px;
+
+        display: block;
+
+        box-sizing: border-box;
+
+        transition:
+            border-color 0.2s ease,
+            background 0.2s ease,
+            box-shadow 0.2s ease;
     }
 
-    .form-control:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.10);
+
+    .login-input:hover {
+        border-color: #9ca3af;
     }
+
+
+    .login-input:focus {
+        background: white;
+
+        border-color: #2563eb;
+
+        box-shadow:
+            0 0 0 4px rgba(37, 99, 235, 0.10);
+    }
+
+
+    .login-input::placeholder {
+        color: #9ca3af;
+    }
+
+
+    /* =========================================================
+       VALIDAÇÃO
+       ========================================================= */
+
+    .validation-message {
+        display: block;
+
+        margin-top: 6px;
+
+        color: #dc2626;
+
+        font-size: 12px;
+    }
+
+
+    /* =========================================================
+       BOTÃO
+       ========================================================= */
 
     .login-button {
-        min-height: 50px;
+        width: 100%;
+
+        height: 52px;
+
+        margin-top: 6px;
+
+        border: none;
+
         border-radius: 12px;
+
+        background:
+            linear-gradient(135deg,
+                #2563eb,
+                #1d4ed8);
+
+        color: white;
+
+        font-size: 15px;
+
         font-weight: 600;
-        font-size: 16px;
-        margin-top: 10px;
-        transition: all 0.2s ease;
+
+        cursor: pointer;
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            filter 0.2s ease;
     }
+
 
     .login-button:hover {
-        transform: translateY(-1px);
+        filter: brightness(1.05);
+
+        transform:
+            translateY(-1px);
+
+        box-shadow:
+            0 10px 25px rgba(37, 99, 235, 0.28);
     }
 
-    .register-link {
+
+    .login-button:active {
+        transform:
+            translateY(0);
+    }
+
+
+    /* =========================================================
+       RODAPÉ
+       ========================================================= */
+
+    .login-footer {
+        margin-top: 30px;
+
         text-align: center;
-        margin-top: 25px;
-        color: #6c757d;
+
+        color: #9ca3af;
+
+        font-size: 11px;
+
+        line-height: 1.5;
     }
 
-    .register-link a {
-        color: #0d6efd;
-        font-weight: 600;
-        text-decoration: none;
-    }
 
-    .register-link a:hover {
-        text-decoration: underline;
-    }
+    /* =========================================================
+       TABLET
+       ========================================================= */
 
-    .alert {
-        border-radius: 12px;
-        border: none;
-    }
+    @@media (max-width: 800px) {
 
-    @@media (max-width: 768px) {
         .login-container {
-            grid-template-columns: 1fr;
+            max-width: 480px;
+
             min-height: auto;
+
+            grid-template-columns: 1fr;
         }
+
 
         .login-brand {
-            padding: 40px 30px;
+            display: none;
         }
 
-        .login-brand h1 {
-            font-size: 34px;
-        }
 
         .login-form-area {
-            padding: 40px 30px;
+            padding: 50px 35px;
+        }
+    }
+
+
+    /* =========================================================
+       CELULAR
+       ========================================================= */
+
+    @@media (max-width: 480px) {
+
+        .login-page {
+            padding: 15px;
+        }
+
+
+        .login-container {
+            border-radius: 18px;
+        }
+
+
+        .login-form-area {
+            padding: 40px 24px;
+        }
+
+
+        .login-header h2 {
+            font-size: 26px;
+        }
+
+
+        .login-input,
+        .login-button {
+            height: 50px;
         }
     }
 </style>
+
 
 <div class="login-page">
 
     <div class="login-container">
 
-        <!-- LADO ESQUERDO -->
+        <!-- =====================================================
+             PAINEL DE APRESENTAÇÃO
+             ===================================================== -->
+
         <div class="login-brand">
 
-            <div class="brand-logo">
-                JA
+            <div class="brand-content">
+
+                <div class="brand-logo">
+                    💼
+                </div>
+
+                <h1 class="brand-title">
+                    JobApply
+                </h1>
+
+                <p class="brand-description">
+                    Organize suas candidaturas,
+                    encontre novas oportunidades
+                    e acompanhe sua jornada profissional
+                    em um só lugar.
+                </p>
+
+
+                <div class="brand-features">
+
+                    <div class="brand-feature">
+
+                        <div class="feature-check">
+                            ✓
+                        </div>
+
+                        <span>
+                            Pesquisa de oportunidades
+                        </span>
+
+                    </div>
+
+
+                    <div class="brand-feature">
+
+                        <div class="feature-check">
+                            ✓
+                        </div>
+
+                        <span>
+                            Organização das candidaturas
+                        </span>
+
+                    </div>
+
+
+                    <div class="brand-feature">
+
+                        <div class="feature-check">
+                            ✓
+                        </div>
+
+                        <span>
+                            Automação de processos
+                        </span>
+
+                    </div>
+
+                </div>
+
             </div>
-
-            <h1>JobApply</h1>
-
-            <div class="brand-line"></div>
-
-            <p>
-                Organize suas oportunidades,
-                acompanhe suas candidaturas e
-                automatize sua busca por vagas.
-            </p>
 
         </div>
 
-        <!-- LADO DIREITO -->
+
+        <!-- =====================================================
+             FORMULÁRIO DE LOGIN
+             ===================================================== -->
+
         <div class="login-form-area">
 
-            <h2>Bem-vindo de volta</h2>
+            <div class="login-form">
 
-            <p class="login-subtitle">
-                Entre na sua conta para continuar.
-            </p>
+                <div class="login-header">
 
-            @if (TempData["CadastroSucesso"] != null)
-            {
-                <div class="alert alert-success mb-4">
-                    @TempData["CadastroSucesso"]
-                </div>
-            }
+                    <h2>
+                        Bem-vindo de volta
+                    </h2>
 
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <p>
+                        Entre com seus dados para acessar o JobApply.
+                    </p>
 
-            <form asp-controller="Conta" asp-action="Login" method="post">
-
-                @Html.AntiForgeryToken()
-
-                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
-
-                <div class="mb-4">
-                    <label asp-for="Nome" class="form-label">
-                        Nome
-                    </label>
-
-                    <input asp-for="Nome" class="form-control" placeholder="Digite seu nome" autocomplete="username" />
                 </div>
 
-                <div class="mb-4">
-                    <label asp-for="Senha" class="form-label">
-                        Senha
-                    </label>
 
-                    <input asp-for="Senha" type="password" class="form-control" placeholder="Digite sua senha"
-                        autocomplete="current-password" />
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="login-error">
+
+                        @Html.ValidationSummary(
+                        true,
+                                        "Nome ou senha inválidos."
+                                        )
+
+                </div>
+                                }
+
+
+                <form asp-controller="Conta" asp-action="Login" method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+
+                    <!-- =================================================
+                         USUÁRIO
+                         ================================================= -->
+
+                    <div class="form-group">
+
+                        <label asp-for="Nome" class="form-label">
+
+                            Usuário
+
+                        </label>
+
+
+                        <div class="input-container">
+
+                            <span class="input-icon">
+                                👤
+                            </span>
+
+
+                            <input asp-for="Nome" class="login-input" placeholder="Digite seu usuário"
+                                autocomplete="username" />
+
+                        </div>
+
+
+                        <span asp-validation-for="Nome" class="validation-message">
+                        </span>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SENHA
+                         ================================================= -->
+
+                    <div class="form-group">
+
+                        <label asp-for="Senha" class="form-label">
+
+                            Senha
+
+                        </label>
+
+
+                        <div class="input-container">
+
+                            <span class="input-icon">
+                                🔒
+                            </span>
+
+
+                            <input asp-for="Senha" type="password" class="login-input" placeholder="Digite sua senha"
+                                autocomplete="current-password" />
+
+                        </div>
+
+
+                        <span asp-validation-for="Senha" class="validation-message">
+                        </span>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         BOTÃO
+                         ================================================= -->
+
+                    <button type="submit" class="login-button">
+
+                        Entrar
+
+                    </button>
+
+                </form>
+
+
+                <div class="login-footer">
+
+                    JobApply
+                    <br />
+
+                    Sistema de gerenciamento de candidaturas
+
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 login-button">
-                    Entrar
-                </button>
-
-            </form>
-
-            <div class="text-center mt-4">
-                <a href="/RecuperarSenha" class="text-decoration-none">
-                    Esqueci minha senha
-                </a>
-            </div>            
+            </div>
 
         </div>
 
     </div>
 
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}

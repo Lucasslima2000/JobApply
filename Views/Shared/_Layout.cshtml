@@ -2,175 +2,459 @@
 <html lang="pt-BR">
 
 <head>
+
     <meta charset="utf-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>@ViewData["Title"] - JobApply</title>
+    <title>
+        @ViewData["Title"] - JobApply
+    </title>
 
     <script type="importmap"></script>
 
-    <link rel="stylesheet"
-          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-    <link rel="stylesheet"
-          href="~/css/site.css"
-          asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-    <link rel="stylesheet"
-          href="~/JobApply.styles.css"
-          asp-append-version="true" />
+    <link rel="stylesheet" href="~/JobApply.styles.css" asp-append-version="true" />
+
+    <style>
+        /* =====================================================
+           LAYOUT GERAL
+           ===================================================== */
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        /* =====================================================
+           ÁREA LOGADA
+           ===================================================== */
+
+        .jobapply-layout {
+            min-height: 100vh;
+
+            background:
+                radial-gradient(circle at 10% 20%,
+                    rgba(37, 99, 235, 0.22),
+                    transparent 32%),
+                radial-gradient(circle at 90% 80%,
+                    rgba(79, 70, 229, 0.20),
+                    transparent 32%),
+                #0f172a;
+        }
+
+        /* =====================================================
+           MENU
+           ===================================================== */
+
+        .jobapply-navbar {
+            width: 100%;
+
+            background: rgba(15, 23, 42, 0.88);
+
+            border-bottom:
+                1px solid rgba(255, 255, 255, 0.08);
+
+            box-shadow:
+                0 5px 25px rgba(0, 0, 0, 0.15);
+
+            backdrop-filter: blur(12px);
+        }
+
+        .jobapply-navbar .container-fluid {
+            min-height: 68px;
+        }
+
+        .jobapply-navbar .navbar-brand {
+            color: white !important;
+
+            font-size: 21px;
+            font-weight: 700;
+
+            letter-spacing: -0.5px;
+        }
+
+        .jobapply-navbar .navbar-brand:hover {
+            color: #bfdbfe !important;
+        }
+
+        .jobapply-navbar .nav-link {
+            color:
+                rgba(255, 255, 255, 0.72) !important;
+
+            font-size: 14px;
+            font-weight: 500;
+
+            transition:
+                color 0.2s ease,
+                background 0.2s ease;
+        }
+
+        .jobapply-navbar .nav-link:hover {
+            color: white !important;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+
+            border-radius: 8px;
+        }
+
+        /* =====================================================
+           BOTÃO MENU MOBILE
+           ===================================================== */
+
+        .jobapply-navbar .navbar-toggler {
+            border:
+                1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .jobapply-navbar .navbar-toggler:focus {
+            box-shadow:
+                0 0 0 3px rgba(37, 99, 235, 0.20);
+        }
+
+        .jobapply-navbar .navbar-toggler-icon {
+            filter: invert(1);
+        }
+
+        /* =====================================================
+           BOTÃO SAIR
+           ===================================================== */
+
+        .jobapply-navbar .logout-button {
+            border: none;
+
+            background: transparent;
+
+            color:
+                rgba(255, 255, 255, 0.72) !important;
+
+            cursor: pointer;
+
+            padding: 8px 12px;
+
+            font-size: 14px;
+            font-weight: 500;
+
+            transition:
+                color 0.2s ease,
+                background 0.2s ease;
+        }
+
+        .jobapply-navbar .logout-button:hover {
+            color: white !important;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+        }
+
+        /* =====================================================
+           USUÁRIO
+           ===================================================== */
+
+        .jobapply-user {
+            color:
+                rgba(255, 255, 255, 0.72);
+
+            font-size: 14px;
+
+            padding: 8px 12px;
+        }
+
+        /* =====================================================
+           CONTEÚDO
+           ===================================================== */
+
+        .jobapply-content {
+            width: 100%;
+
+            min-height:
+                calc(100vh - 68px);
+
+            margin: 0;
+            padding: 0;
+        }
+
+        /* =====================================================
+           FOOTER
+           ===================================================== */
+
+        .jobapply-footer {
+            width: 100%;
+
+            padding: 18px 0;
+
+            border-top:
+                1px solid rgba(255, 255, 255, 0.08);
+
+            background:
+                rgba(15, 23, 42, 0.70);
+
+            color:
+                rgba(255, 255, 255, 0.45);
+
+            font-size: 12px;
+        }
+
+        /* =====================================================
+           MOBILE
+           ===================================================== */
+
+        @@media (max-width: 575px) {
+
+            .jobapply-navbar .container-fluid {
+                min-height: 62px;
+            }
+
+            .jobapply-navbar .navbar-collapse {
+                padding:
+                    12px 0 15px;
+            }
+
+            .jobapply-navbar .nav-link {
+                padding:
+                    9px 12px;
+            }
+
+            .jobapply-user {
+                padding:
+                    12px;
+            }
+
+        }
+
+        /* =====================================================
+   USUÁRIO / ÍCONE
+   ===================================================== */
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-icon {
+            width: 34px;
+            height: 34px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 255, 255, 0.12);
+
+            font-size: 16px;
+        }
+
+        .jobapply-user {
+            padding-left: 4px;
+        }
+    </style>
+
 </head>
+
 
 <body>
 
     @* =========================================================
-       MENU DO SISTEMA
-       Só aparece para usuário autenticado.
+       ÁREA DO SISTEMA
        ========================================================= *@
 
     @if (User.Identity?.IsAuthenticated == true)
     {
-        <header>
-            <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <div class="jobapply-layout">
 
-                <div class="container-fluid">
+            @* =================================================
+               MENU
+               ================================================= *@
 
-                    <a class="navbar-brand"
-                       asp-area=""
-                       asp-controller="Home"
-                       asp-action="Index">
-                        JobApply
-                    </a>
+            <header>
 
-                    <button class="navbar-toggler"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target=".navbar-collapse"
-                            aria-controls="navbarSupportedContent"
-                            aria-expanded="false"
+                <nav class="navbar navbar-expand-sm jobapply-navbar">
+
+                    <div class="container-fluid">
+
+                        @* LOGO *@
+
+                        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+
+                            JobApply
+
+                        </a>
+
+
+                        @* BOTÃO MOBILE *@
+
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                            data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent" aria-expanded="false"
                             aria-label="Abrir menu">
 
-                        <span class="navbar-toggler-icon"></span>
+                            <span class="navbar-toggler-icon"></span>
 
-                    </button>
+                        </button>
 
-                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
 
-                        <!-- MENU PRINCIPAL -->
+                        @* MENU *@
 
-                        <ul class="navbar-nav flex-grow-1">
+                        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
 
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-controller="Home"
-                                   asp-action="Index">
-                                    Home
-                                </a>
-                            </li>
+                            <ul class="navbar-nav flex-grow-1">
 
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-controller="Vagas"
-                                   asp-action="Index">
-                                    Vagas
-                                </a>
-                            </li>
+                                <li class="nav-item">
 
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-controller="Automacao"
-                                   asp-action="Index">
-                                    Automação
-                                </a>
-                            </li>
+                                    <a class="nav-link" asp-controller="Home" asp-action="Index">
 
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-controller="Usuarios"
-                                   asp-action="Index">
-                                    Usuários
-                                </a>
-                            </li>
+                                        Home
 
-                        </ul>
+                                    </a>
 
-                        <!-- USUÁRIO / SAIR -->
+                                </li>
 
-                        <ul class="navbar-nav">
 
-                            <li class="nav-item">
-                                <span class="nav-link text-dark">
-                                    Olá, @User.Identity?.Name
-                                </span>
-                            </li>
+                                <li class="nav-item">
 
-                            <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Vagas" asp-action="Index">
 
-                                <form asp-controller="Conta"
-                                      asp-action="Logout"
-                                      method="post"
-                                      class="d-inline">
+                                        Vagas
 
-                                    @Html.AntiForgeryToken()
+                                    </a>
 
-                                    <button type="submit"
-                                            class="nav-link btn btn-link text-dark">
-                                        Sair
-                                    </button>
+                                </li>
 
-                                </form>
 
-                            </li>
+                                <li class="nav-item">
 
-                        </ul>
+                                    <a class="nav-link" asp-controller="Automacao" asp-action="Index">
+
+                                        Automação
+
+                                    </a>
+
+                                </li>
+
+
+                                <li class="nav-item">
+
+                                    <a class="nav-link" asp-controller="Usuarios" asp-action="Index">
+
+                                        Usuários
+
+                                    </a>
+
+                                </li>
+
+                            </ul>
+
+
+                            @* USUÁRIO / SAIR *@
+
+                            <ul class="navbar-nav align-items-sm-center">
+
+                                <li class="nav-item user-area">
+
+                                    <div class="user-icon">
+                                        👤
+                                    </div>
+
+                                    <span class="nav-link jobapply-user">
+                                        Olá, @User.Identity?.Name
+                                    </span>
+
+                                </li>
+
+                                <li class="nav-item">
+
+                                    <form asp-controller="Conta" asp-action="Logout" method="post" class="d-inline">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <button type="submit" class="logout-button">
+
+                                            Sair
+
+                                        </button>
+
+                                    </form>
+
+                                </li>
+
+                            </ul>
+                        </div>
 
                     </div>
+
+                </nav>
+
+            </header>
+
+
+            @* =================================================
+               CONTEÚDO
+               ================================================= *@
+
+            <main role="main" class="jobapply-content">
+
+                @RenderBody()
+
+            </main>
+
+
+            @* =================================================
+               FOOTER
+               ================================================= *@
+
+            <footer class="jobapply-footer">
+
+                <div class="container">
+
+                    &copy; 2026 - JobApply
+
                 </div>
 
-            </nav>
-        </header>
+            </footer>
+
+        </div>
     }
-
-    @* =========================================================
-       CONTEÚDO
-       ========================================================= *@
-
-    <div class="container">
-
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-
-    </div>
-
-    @* =========================================================
-       FOOTER
-       Só aparece para usuário autenticado.
-       ========================================================= *@
-
-    @if (User.Identity?.IsAuthenticated == true)
+    else
     {
-        <footer class="border-top footer text-muted">
+        @* =====================================================
+           LOGIN / ÁREA NÃO AUTENTICADA
 
-            <div class="container">
-                &copy; 2026 - JobApply
-            </div>
+           Não aplica o fundo do sistema aqui.
+           A tela de Login possui seu próprio design.
+           ===================================================== *@
 
-        </footer>
+        @RenderBody()
     }
+
+
+    @* =========================================================
+       SCRIPTS
+       ========================================================= *@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="~/js/site.js"
-            asp-append-version="true">
+    <script src="~/js/site.js" asp-append-version="true">
     </script>
 
     @await RenderSectionAsync(
-        "Scripts",
+    "Scripts",
         required: false
-    )
+        )
 
 </body>
 

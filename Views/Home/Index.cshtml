@@ -1,15 +1,631 @@
 ﻿@{
-    ViewData["Title"] = "JobApply";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1>JobApply</h1>
+<style>
+    /* =========================================================
+       FUNDO DA PÁGINA
+       ========================================================= */
 
-    <p>
-        Sistema para organizar e acompanhar candidaturas a vagas.
-    </p>
+    body {
+        margin: 0;
+        min-height: 100vh;
 
-    <button class="btn btn-primary">
-        Começar
-    </button>
+        background:
+            radial-gradient(circle at 10% 20%,
+                rgba(37, 99, 235, 0.22),
+                transparent 32%),
+            radial-gradient(circle at 90% 80%,
+                rgba(79, 70, 229, 0.20),
+                transparent 32%),
+            #0f172a;
+    }
+
+
+    /* =========================================================
+       DASHBOARD
+       ========================================================= */
+
+    .dashboard {
+        width: 100%;
+        min-height: calc(100vh - 1px);
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 40px 25px;
+    }
+
+
+    .dashboard-container {
+        width: 100%;
+        max-width: 1100px;
+
+        margin: 0 auto;
+    }
+
+
+    /* =========================================================
+       CABEÇALHO
+       ========================================================= */
+
+    .dashboard-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 25px;
+
+        margin-bottom: 35px;
+    }
+
+
+    .dashboard-title h1 {
+        margin: 0;
+
+        color: white;
+
+        font-size: 36px;
+        font-weight: 700;
+
+        letter-spacing: -1px;
+    }
+
+
+    .dashboard-title p {
+        margin: 8px 0 0;
+
+        color: rgba(255, 255, 255, 0.65);
+
+        font-size: 15px;
+    }
+
+
+    /* =========================================================
+       USUÁRIO
+       ========================================================= */
+
+    .user-badge {
+        display: flex;
+        align-items: center;
+
+        gap: 11px;
+
+        padding: 10px 15px;
+
+        border:
+            1px solid rgba(255, 255, 255, 0.10);
+
+        border-radius: 13px;
+
+        background:
+            rgba(255, 255, 255, 0.08);
+
+        color: white;
+
+        font-size: 14px;
+
+        backdrop-filter: blur(10px);
+    }
+
+
+    .user-icon {
+        width: 34px;
+        height: 34px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 10px;
+
+        background:
+            rgba(255, 255, 255, 0.12);
+
+        font-size: 16px;
+    }
+
+
+    /* =========================================================
+       CARDS
+       ========================================================= */
+
+    .dashboard-grid {
+        display: grid;
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 22px;
+    }
+
+
+    .dashboard-card {
+        position: relative;
+
+        min-height: 245px;
+
+        display: flex;
+        flex-direction: column;
+
+        justify-content: space-between;
+
+        padding: 28px;
+
+        border:
+            1px solid rgba(255, 255, 255, 0.10);
+
+        border-radius: 20px;
+
+        background:
+            rgba(255, 255, 255, 0.97);
+
+        text-decoration: none;
+
+        overflow: hidden;
+
+        box-shadow:
+            0 20px 45px rgba(0, 0, 0, 0.20);
+
+        transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease,
+            border-color 0.25s ease;
+    }
+
+
+    .dashboard-card:hover {
+        transform: translateY(-6px);
+
+        border-color:
+            rgba(255, 255, 255, 0.30);
+
+        box-shadow:
+            0 25px 55px rgba(0, 0, 0, 0.30);
+    }
+
+
+    /* =========================================================
+       DECORAÇÃO
+       ========================================================= */
+
+    .card-decoration {
+        position: absolute;
+
+        width: 170px;
+        height: 170px;
+
+        right: -75px;
+        bottom: -80px;
+
+        border-radius: 50%;
+
+        background: #eff6ff;
+
+        pointer-events: none;
+    }
+
+
+    .dashboard-card:nth-child(2) .card-decoration {
+        background: #eef2ff;
+    }
+
+
+    .dashboard-card:nth-child(3) .card-decoration {
+        background: #f0fdf4;
+    }
+
+
+    /* =========================================================
+       ÍCONES
+       ========================================================= */
+
+    .card-icon {
+        position: relative;
+        z-index: 1;
+
+        width: 64px;
+        height: 64px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 17px;
+
+        background: #eff6ff;
+
+        font-size: 28px;
+    }
+
+
+    .dashboard-card:nth-child(2) .card-icon {
+        background: #eef2ff;
+    }
+
+
+    .dashboard-card:nth-child(3) .card-icon {
+        background: #f0fdf4;
+    }
+
+
+    /* =========================================================
+       CONTEÚDO
+       ========================================================= */
+
+    .card-content {
+        position: relative;
+
+        z-index: 1;
+
+        margin-top: 25px;
+    }
+
+
+    .card-content h3 {
+        margin: 0 0 8px;
+
+        color: #111827;
+
+        font-size: 21px;
+
+        font-weight: 700;
+    }
+
+
+    .card-content p {
+        margin: 0;
+
+        color: #6b7280;
+
+        font-size: 14px;
+
+        line-height: 1.6;
+    }
+
+
+    /* =========================================================
+       LINK
+       ========================================================= */
+
+    .card-link {
+        position: relative;
+
+        z-index: 1;
+
+        display: inline-flex;
+        align-items: center;
+
+        gap: 7px;
+
+        margin-top: 20px;
+
+        color: #2563eb;
+
+        font-size: 13px;
+
+        font-weight: 600;
+
+        transition: gap 0.2s ease;
+    }
+
+
+    .dashboard-card:nth-child(2) .card-link {
+        color: #4f46e5;
+    }
+
+
+    .dashboard-card:nth-child(3) .card-link {
+        color: #16a34a;
+    }
+
+
+    .dashboard-card:hover .card-link {
+        gap: 11px;
+    }
+
+
+    /* =========================================================
+       RESPONSIVIDADE - TABLET
+       ========================================================= */
+
+    @@media (max-width: 900px) {
+
+        .dashboard {
+            align-items: flex-start;
+
+            padding-top: 55px;
+        }
+
+
+        .dashboard-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+
+        .dashboard-card:last-child {
+            grid-column:
+                1 / -1;
+
+            max-width: calc(50% - 11px);
+
+            width: 100%;
+
+            margin: 0 auto;
+        }
+    }
+
+
+    /* =========================================================
+       RESPONSIVIDADE - CELULAR
+       ========================================================= */
+
+    @@media (max-width: 600px) {
+
+        .dashboard {
+            min-height: 100vh;
+
+            padding:
+                30px 18px 40px;
+
+            align-items: flex-start;
+        }
+
+
+        .dashboard-header {
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            margin-bottom: 25px;
+        }
+
+
+        .dashboard-title h1 {
+            font-size: 29px;
+        }
+
+
+        .dashboard-title p {
+            font-size: 14px;
+        }
+
+
+        .user-badge {
+            width: 100%;
+
+            justify-content: flex-start;
+        }
+
+
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+
+            gap: 16px;
+        }
+
+
+        .dashboard-card {
+            min-height: 200px;
+
+            padding: 23px;
+        }
+
+
+        .dashboard-card:last-child {
+            grid-column: auto;
+
+            max-width: none;
+
+            margin: 0;
+        }
+    }
+
+
+    /* =========================================================
+       CELULAR PEQUENO
+       ========================================================= */
+
+    @@media (max-width: 400px) {
+
+        .dashboard {
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+
+        .dashboard-title h1 {
+            font-size: 26px;
+        }
+
+
+        .dashboard-card {
+            min-height: 190px;
+
+            padding: 21px;
+        }
+
+
+        .card-icon {
+            width: 57px;
+            height: 57px;
+
+            font-size: 25px;
+        }
+    }
+</style>
+
+
+<div class="dashboard">
+
+    <div class="dashboard-container">
+
+
+        <!-- =====================================================
+             CABEÇALHO
+             ===================================================== -->
+
+        <div class="dashboard-header">
+
+            <div class="dashboard-title">
+
+                <h1>
+                    Dashboard
+                </h1>
+
+                <p>
+                    Gerencie suas vagas e candidaturas pelo JobApply.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             MENU PRINCIPAL
+             ===================================================== -->
+
+        <div class="dashboard-grid">
+
+
+            <!-- =================================================
+                 VAGAS
+                 ================================================= -->
+
+            <a asp-controller="Vagas" asp-action="Index" class="dashboard-card">
+
+                <div class="card-decoration"></div>
+
+                <div>
+
+                    <div class="card-icon">
+                        🔎
+                    </div>
+
+
+                    <div class="card-content">
+
+                        <h3>
+                            Vagas
+                        </h3>
+
+                        <p>
+                            Pesquise e visualize
+                            oportunidades disponíveis
+                            no sistema.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <span class="card-link">
+
+                    Pesquisar vagas
+
+                    <span>
+                        →
+                    </span>
+
+                </span>
+
+            </a>
+
+
+            <!-- =================================================
+                 AUTOMAÇÃO
+                 ================================================= -->
+
+            <a asp-controller="Automacao" asp-action="Index" class="dashboard-card">
+
+                <div class="card-decoration"></div>
+
+                <div>
+
+                    <div class="card-icon">
+                        🤖
+                    </div>
+
+
+                    <div class="card-content">
+
+                        <h3>
+                            Automação
+                        </h3>
+
+                        <p>
+                            Pesquise vagas no LinkedIn
+                            e execute ações de candidatura.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <span class="card-link">
+
+                    Abrir automação
+
+                    <span>
+                        →
+                    </span>
+
+                </span>
+
+            </a>
+
+
+            <!-- =================================================
+                 USUÁRIOS
+                 ================================================= -->
+
+            <a asp-controller="Usuarios" asp-action="Index" class="dashboard-card">
+
+                <div class="card-decoration"></div>
+
+                <div>
+
+                    <div class="card-icon">
+                        👥
+                    </div>
+
+
+                    <div class="card-content">
+
+                        <h3>
+                            Usuários
+                        </h3>
+
+                        <p>
+                            Gerencie os usuários
+                            cadastrados no sistema.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <span class="card-link">
+
+                    Gerenciar usuários
+
+                    <span>
+                        →
+                    </span>
+
+                </span>
+
+            </a>
+
+
+        </div>
+
+    </div>
+
 </div>

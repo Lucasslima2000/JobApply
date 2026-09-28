@@ -1,109 +1,829 @@
 @model List<JobApply.Models.Vaga>
 
 @{
-    ViewData["Title"] = "Vagas";
+ViewData["Title"] = "Vagas";
 }
 
-<div class="text-center">
-    <h1>Vagas</h1>
-    <form asp-action="Index" method="get" class="mb-4">
+<div class="vagas-page">
 
-        <div class="row">
+```
+<!-- CABEÇALHO -->
+<div class="vagas-header">
 
-            <div class="col-md-5">
-                <label class="form-label">Pesquisar</label>
+    <div>
+        <h1>Vagas</h1>
+        <p>
+            Gerencie as oportunidades cadastradas no JobApply.
+        </p>
+    </div>
 
-                <input type="text" name="busca" value="@ViewBag.Busca" class="form-control"
-                    placeholder="Título ou empresa" />
-            </div>
+    <a asp-controller="Vagas"
+       asp-action="Create"
+       class="nova-vaga-button">
+        + Nova Vaga
+    </a>
 
-            <div class="col-md-4">
-                <label class="form-label">Status</label>
+</div>
 
-                <select name="status" class="form-select">
-                    <option value="">Todos</option>
 
-                    <option value="Interessado" selected="@(ViewBag.Status == "Interessado")">
-                        Interessado
-                    </option>
+<!-- FILTROS -->
+<div class="vagas-filter-card">
 
-                    <option value="Candidatado" selected="@(ViewBag.Status == "Candidatado")">
-                        Candidatado
-                    </option>
+    <div class="filter-header">
+        <div class="filter-icon">
+            🔎
+        </div>
 
-                    <option value="Entrevista" selected="@(ViewBag.Status == "Entrevista")">
-                        Entrevista
-                    </option>
+        <div>
+            <h2>Pesquisar vagas</h2>
+            <p>Filtre suas oportunidades por título, empresa ou status.</p>
+        </div>
+    </div>
 
-                    <option value="Recusado" selected="@(ViewBag.Status == "Recusado")">
-                        Recusado
-                    </option>
 
-                    <option value="Aprovado" selected="@(ViewBag.Status == "Aprovado")">
-                        Aprovado
-                    </option>
-                </select>
-            </div>
+    <form asp-action="Index"
+          method="get"
+          class="vagas-filter-form">
 
-            <div class="col-md-3 d-flex align-items-end gap-2">
+        <!-- PESQUISA -->
+        <div class="vaga-filter-field">
 
-                <button type="submit" class="btn btn-primary">
-                    Pesquisar
-                </button>
+            <label class="vaga-filter-label">
+                Pesquisar
+            </label>
 
-                <a asp-action="Index" class="btn btn-secondary">
-                    Limpar
-                </a>
+            <input type="text"
+                   name="busca"
+                   value="@ViewBag.Busca"
+                   class="vaga-filter-input"
+                   placeholder="Título ou empresa" />
 
-            </div>
+        </div>
+
+
+        <!-- STATUS -->
+        <div class="vaga-filter-field">
+
+            <label class="vaga-filter-label">
+                Status
+            </label>
+
+            <select name="status"
+                    class="vaga-filter-input">
+
+                <option value="">Todos</option>
+
+                <option value="Interessado"
+                        selected="@(ViewBag.Status == "Interessado")">
+                    Interessado
+                </option>
+
+                <option value="Candidatado"
+                        selected="@(ViewBag.Status == "Candidatado")">
+                    Candidatado
+                </option>
+
+                <option value="Entrevista"
+                        selected="@(ViewBag.Status == "Entrevista")">
+                    Entrevista
+                </option>
+
+                <option value="Recusado"
+                        selected="@(ViewBag.Status == "Recusado")">
+                    Recusado
+                </option>
+
+                <option value="Aprovado"
+                        selected="@(ViewBag.Status == "Aprovado")">
+                    Aprovado
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- BOTÕES -->
+        <div class="vaga-filter-actions">
+
+            <button type="submit"
+                    class="pesquisar-button">
+                🔎 Pesquisar
+            </button>
+
+            <a asp-action="Index"
+               class="limpar-button">
+                Limpar
+            </a>
 
         </div>
 
     </form>
 
-    <p>Vagas cadastradas no JobApply</p>
 </div>
-<a asp-controller="Vagas" asp-action="Create" class="btn btn-success mb-3">
-    + Nova Vaga
-</a>
 
-<div class="container mt-4">
 
-    @foreach (var vaga in Model)
+<!-- CONTADOR -->
+<div class="vagas-result-header">
+
+    <div>
+        <strong>@Model.Count</strong>
+        @(Model.Count == 1 ? "vaga encontrada" : "vagas encontradas")
+    </div>
+
+</div>
+
+
+<!-- LISTA DE VAGAS -->
+<div class="vagas-list">
+
+    @if (Model.Any())
     {
-        <div class="card mb-3">
-            <div class="card-body">
+        foreach (var vaga in Model)
+        {
+            <div class="vaga-card">
 
-                <h5 class="card-title">@vaga.Titulo</h5>
+                <div class="vaga-card-content">
 
-                <p class="card-text">
-                    <strong>Empresa:</strong> @vaga.Empresa
-                </p>
+                    <!-- INFORMAÇÕES -->
+                    <div class="vaga-info">
 
-                <p class="card-text">
-                    <strong>Localização:</strong> @vaga.Localizacao
-                </p>
+                        <div class="vaga-title-row">
 
-                <p class="card-text">
-                    <strong>Status:</strong> @vaga.Status
-                </p>
+                            <div class="vaga-title-icon">
+                                💼
+                            </div>
 
-                <a href="@vaga.Link" target="_blank" class="btn btn-primary">
-                    Ver vaga
-                </a>
-                <a asp-controller="Vagas" asp-action="Edit" asp-route-id="@vaga.Id" class="btn btn-warning">
-                    Editar
-                </a>
-                <form asp-action="Delete" asp-route-id="@vaga.Id" method="post" style="display:inline;"
-                onsubmit="return confirm('Tem certeza que deseja excluir esta vaga?');">
+                            <div>
+                                <h2>
+                                    @vaga.Titulo
+                                </h2>
 
-                    <button type="submit" class="btn btn-danger">
-                        Excluir
-                    </button>
+                                <p class="vaga-company">
+                                    @vaga.Empresa
+                                </p>
+                            </div>
 
-                </form>
+                        </div>
+
+
+                        <div class="vaga-details">
+
+                            <span>
+                                📍 @vaga.Localizacao
+                            </span>
+
+                            <span class="vaga-status">
+                                @vaga.Status
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- AÇÕES -->
+                    <div class="vaga-actions">
+
+                        <a href="@vaga.Link"
+                           target="_blank"
+                           class="vaga-button vaga-button-primary">
+                            Ver vaga
+                        </a>
+
+                        <a asp-controller="Vagas"
+                           asp-action="Edit"
+                           asp-route-id="@vaga.Id"
+                           class="vaga-button vaga-button-edit">
+                            Editar
+                        </a>
+
+                        <form asp-action="Delete"
+                              asp-route-id="@vaga.Id"
+                              method="post"
+                              class="delete-form"
+                              onsubmit="return confirm('Tem certeza que deseja excluir esta vaga?');">
+
+                            <button type="submit"
+                                    class="vaga-button vaga-button-delete">
+                                Excluir
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
             </div>
+        }
+    }
+    else
+    {
+        <div class="vagas-empty">
+
+            <div class="empty-icon">
+                📋
+            </div>
+
+            <h2>Nenhuma vaga encontrada</h2>
+
+            <p>
+                Não existem vagas que correspondam aos filtros informados.
+            </p>
+
+            <a asp-controller="Vagas"
+               asp-action="Create"
+               class="nova-vaga-button">
+                + Cadastrar nova vaga
+            </a>
+
         </div>
     }
 
 </div>
+```
+
+</div>
+
+<style>
+
+    /* =====================================================
+       PÁGINA
+       ===================================================== */
+
+    .vagas-page {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 24px 50px;
+        box-sizing: border-box;
+    }
+
+
+    /* =====================================================
+       CABEÇALHO
+       ===================================================== */
+
+    .vagas-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+
+    .vagas-header h1 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .vagas-header p {
+        margin: 7px 0 0;
+        color: #94a3b8;
+        font-size: 15px;
+    }
+
+
+    /* =====================================================
+       BOTÃO NOVA VAGA
+       ===================================================== */
+
+    .nova-vaga-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 44px;
+        padding: 0 20px;
+
+        border-radius: 10px;
+
+        background: linear-gradient(
+            135deg,
+            #2563eb,
+            #4f46e5
+        );
+
+        color: #ffffff;
+        text-decoration: none;
+
+        font-size: 14px;
+        font-weight: 600;
+
+        border: none;
+
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+
+        transition: 0.2s ease;
+    }
+
+    .nova-vaga-button:hover {
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(37, 99, 235, 0.35);
+    }
+
+
+    /* =====================================================
+       FILTROS
+       ===================================================== */
+
+    .vagas-filter-card {
+        background: rgba(255, 255, 255, 0.97);
+        border-radius: 18px;
+
+        padding: 24px;
+
+        margin-bottom: 24px;
+
+        box-shadow:
+            0 20px 45px rgba(0, 0, 0, 0.18);
+    }
+
+    .filter-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+
+        margin-bottom: 22px;
+    }
+
+    .filter-icon {
+        width: 44px;
+        height: 44px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        background: #eff6ff;
+
+        font-size: 20px;
+    }
+
+    .filter-header h2 {
+        margin: 0;
+
+        color: #0f172a;
+
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .filter-header p {
+        margin: 4px 0 0;
+
+        color: #64748b;
+
+        font-size: 13px;
+    }
+
+
+    .vagas-filter-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: end;
+    }
+
+
+    .vaga-filter-field {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .vaga-filter-label {
+        color: #334155;
+
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .vaga-filter-input {
+        width: 100%;
+        height: 44px;
+
+        box-sizing: border-box;
+
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+
+        padding: 0 13px;
+
+        background: #ffffff;
+
+        color: #0f172a;
+
+        font-size: 14px;
+
+        outline: none;
+
+        transition: 0.2s ease;
+    }
+
+    .vaga-filter-input:focus {
+        border-color: #2563eb;
+
+        box-shadow:
+            0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+
+    /* =====================================================
+       BOTÕES DOS FILTROS
+       ===================================================== */
+
+    .vaga-filter-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .pesquisar-button,
+    .limpar-button {
+        height: 44px;
+
+        padding: 0 17px;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+        font-weight: 600;
+
+        cursor: pointer;
+
+        text-decoration: none;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        transition: 0.2s ease;
+    }
+
+    .pesquisar-button {
+        border: none;
+
+        color: #ffffff;
+
+        background: linear-gradient(
+            135deg,
+            #2563eb,
+            #4f46e5
+        );
+    }
+
+    .pesquisar-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 7px 18px rgba(37, 99, 235, 0.25);
+    }
+
+    .limpar-button {
+        color: #334155;
+
+        background: #f1f5f9;
+
+        border: 1px solid #e2e8f0;
+    }
+
+    .limpar-button:hover {
+        color: #0f172a;
+        background: #e2e8f0;
+    }
+
+
+    /* =====================================================
+       RESULTADOS
+       ===================================================== */
+
+    .vagas-result-header {
+        margin: 8px 0 14px;
+
+        color: #cbd5e1;
+
+        font-size: 14px;
+    }
+
+    .vagas-result-header strong {
+        color: #ffffff;
+    }
+
+
+    /* =====================================================
+       CARD DA VAGA
+       ===================================================== */
+
+    .vagas-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .vaga-card {
+        background: rgba(255, 255, 255, 0.97);
+
+        border-radius: 16px;
+
+        padding: 20px 22px;
+
+        box-shadow:
+            0 12px 30px rgba(0, 0, 0, 0.15);
+
+        transition: 0.2s ease;
+    }
+
+    .vaga-card:hover {
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 18px 35px rgba(0, 0, 0, 0.20);
+    }
+
+    .vaga-card-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 25px;
+    }
+
+
+    /* =====================================================
+       INFORMAÇÕES DA VAGA
+       ===================================================== */
+
+    .vaga-info {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .vaga-title-row {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+    }
+
+    .vaga-title-icon {
+        width: 42px;
+        height: 42px;
+
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 11px;
+
+        background: #eff6ff;
+
+        font-size: 19px;
+    }
+
+    .vaga-title-row h2 {
+        margin: 0;
+
+        color: #0f172a;
+
+        font-size: 17px;
+        font-weight: 700;
+
+        word-break: break-word;
+    }
+
+    .vaga-company {
+        margin: 4px 0 0;
+
+        color: #64748b;
+
+        font-size: 14px;
+    }
+
+
+    .vaga-details {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+
+        gap: 10px;
+
+        margin-top: 14px;
+
+        color: #64748b;
+
+        font-size: 13px;
+    }
+
+    .vaga-status {
+        display: inline-flex;
+        align-items: center;
+
+        padding: 5px 10px;
+
+        border-radius: 999px;
+
+        background: #eef2ff;
+
+        color: #4338ca;
+
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+
+    /* =====================================================
+       AÇÕES
+       ===================================================== */
+
+    .vaga-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        flex-shrink: 0;
+    }
+
+    .vaga-button {
+        min-height: 38px;
+
+        padding: 0 13px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 9px;
+
+        font-size: 12px;
+        font-weight: 600;
+
+        text-decoration: none;
+
+        border: none;
+
+        cursor: pointer;
+
+        transition: 0.2s ease;
+    }
+
+    .vaga-button-primary {
+        color: #ffffff;
+
+        background: #2563eb;
+    }
+
+    .vaga-button-primary:hover {
+        color: #ffffff;
+        background: #1d4ed8;
+    }
+
+    .vaga-button-edit {
+        color: #92400e;
+
+        background: #fef3c7;
+    }
+
+    .vaga-button-edit:hover {
+        color: #78350f;
+        background: #fde68a;
+    }
+
+    .vaga-button-delete {
+        color: #991b1b;
+
+        background: #fee2e2;
+    }
+
+    .vaga-button-delete:hover {
+        color: #7f1d1d;
+        background: #fecaca;
+    }
+
+    .delete-form {
+        margin: 0;
+    }
+
+
+    /* =====================================================
+       ESTADO VAZIO
+       ===================================================== */
+
+    .vagas-empty {
+        background: rgba(255, 255, 255, 0.97);
+
+        border-radius: 18px;
+
+        padding: 55px 25px;
+
+        text-align: center;
+
+        box-shadow:
+            0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .empty-icon {
+        font-size: 42px;
+        margin-bottom: 12px;
+    }
+
+    .vagas-empty h2 {
+        margin: 0;
+
+        color: #0f172a;
+
+        font-size: 20px;
+    }
+
+    .vagas-empty p {
+        margin: 8px 0 22px;
+
+        color: #64748b;
+
+        font-size: 14px;
+    }
+
+
+    /* =====================================================
+       RESPONSIVO
+       ===================================================== */
+
+    @@media (max-width: 900px) {
+
+        .vagas-filter-form {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .vaga-filter-actions {
+            grid-column: span 2;
+        }
+
+        .vaga-filter-actions button,
+        .vaga-filter-actions a {
+            flex: 1;
+        }
+
+        .vaga-card-content {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .vaga-actions {
+            width: 100%;
+        }
+
+        .vaga-button {
+            flex: 1;
+        }
+    }
+
+
+    @@media (max-width: 650px) {
+
+        .vagas-page {
+            padding: 15px 14px 40px;
+        }
+
+        .vagas-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .vagas-header h1 {
+            font-size: 28px;
+        }
+
+        .nova-vaga-button {
+            width: 100%;
+        }
+
+        .vagas-filter-card {
+            padding: 18px;
+        }
+
+        .vagas-filter-form {
+            grid-template-columns: 1fr;
+        }
+
+        .vaga-filter-actions {
+            grid-column: auto;
+        }
+
+        .vaga-card {
+            padding: 18px;
+        }
+
+        .vaga-actions {
+            flex-direction: column;
+        }
+
+        .vaga-button {
+            width: 100%;
+        }
+    }
+
+</style>

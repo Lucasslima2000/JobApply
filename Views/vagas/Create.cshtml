@@ -1,65 +1,559 @@
+
 @model JobApply.Models.Vaga
 
 @{
     ViewData["Title"] = "Nova Vaga";
 }
 
-<div class="container">
-    <h1>Nova Vaga</h1>
+<style>
+    /* =====================================================
+       PÁGINA
+       ===================================================== */
 
-    <form asp-action="Create" method="post">
+    .vaga-form-page {
+        width: 100%;
+        min-height: calc(100vh - 68px);
 
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        display: flex;
+        justify-content: center;
 
-        <div class="mb-3">
-            <label asp-for="Titulo" class="form-label"></label>
-            <input asp-for="Titulo" class="form-control" />
-            <span asp-validation-for="Titulo" class="text-danger"></span>
+        padding: 45px 25px 60px;
+    }
+
+    .vaga-form-container {
+        width: 100%;
+        max-width: 850px;
+    }
+
+
+    /* =====================================================
+       CABEÇALHO
+       ===================================================== */
+
+    .vaga-form-header {
+        margin-bottom: 28px;
+    }
+
+    .vaga-form-header h1 {
+        margin: 0;
+
+        color: white;
+
+        font-size: 34px;
+        font-weight: 700;
+
+        letter-spacing: -1px;
+    }
+
+    .vaga-form-header p {
+        margin: 9px 0 0;
+
+        color:
+            rgba(255, 255, 255, 0.62);
+
+        font-size: 15px;
+    }
+
+
+    /* =====================================================
+       CARD
+       ===================================================== */
+
+    .vaga-form-card {
+        padding: 32px;
+
+        border:
+            1px solid rgba(255, 255, 255, 0.10);
+
+        border-radius: 20px;
+
+        background:
+            rgba(255, 255, 255, 0.07);
+
+        box-shadow:
+            0 20px 45px rgba(0, 0, 0, 0.18);
+
+        backdrop-filter: blur(14px);
+    }
+
+
+    /* =====================================================
+       TÍTULO DO FORMULÁRIO
+       ===================================================== */
+
+    .form-section-title {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+
+        margin-bottom: 27px;
+
+        color: white;
+
+        font-size: 17px;
+        font-weight: 600;
+    }
+
+    .form-section-icon {
+        width: 38px;
+        height: 38px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 10px;
+
+        background:
+            rgba(37, 99, 235, 0.18);
+
+        font-size: 18px;
+    }
+
+
+    /* =====================================================
+       CAMPOS
+       ===================================================== */
+
+    .vaga-form-group {
+        margin-bottom: 22px;
+    }
+
+    .vaga-form-label {
+        display: block;
+
+        margin-bottom: 8px;
+
+        color:
+            rgba(255, 255, 255, 0.82);
+
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .vaga-form-input,
+    .vaga-form-select {
+        width: 100%;
+        height: 49px;
+
+        box-sizing: border-box;
+
+        padding:
+            0 15px;
+
+        border:
+            1px solid rgba(255, 255, 255, 0.13);
+
+        border-radius: 11px;
+
+        outline: none;
+
+        background:
+            rgba(15, 23, 42, 0.65);
+
+        color: white;
+
+        font-size: 14px;
+
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            background 0.2s ease;
+    }
+
+    .vaga-form-input::placeholder {
+        color:
+            rgba(255, 255, 255, 0.35);
+    }
+
+    .vaga-form-input:hover,
+    .vaga-form-select:hover {
+        border-color:
+            rgba(255, 255, 255, 0.25);
+    }
+
+    .vaga-form-input:focus,
+    .vaga-form-select:focus {
+        background:
+            rgba(15, 23, 42, 0.85);
+
+        border-color:
+            #2563eb;
+
+        box-shadow:
+            0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .vaga-form-select option {
+        background: #0f172a;
+        color: white;
+    }
+
+
+    /* =====================================================
+       VALIDAÇÃO
+       ===================================================== */
+
+    .validation-message {
+        display: block;
+
+        margin-top: 6px;
+
+        color:
+            #fca5a5;
+
+        font-size: 12px;
+    }
+
+    .validation-summary {
+        margin-bottom: 22px;
+
+        padding: 13px 15px;
+
+        border:
+            1px solid rgba(239, 68, 68, 0.25);
+
+        border-radius: 10px;
+
+        background:
+            rgba(239, 68, 68, 0.10);
+
+        color:
+            #fca5a5;
+
+        font-size: 13px;
+    }
+
+
+    /* =====================================================
+       SEPARADOR
+       ===================================================== */
+
+    .form-divider {
+        height: 1px;
+
+        margin:
+            28px 0;
+
+        background:
+            rgba(255, 255, 255, 0.08);
+    }
+
+
+    /* =====================================================
+       BOTÕES
+       ===================================================== */
+
+    .vaga-form-actions {
+        display: flex;
+        align-items: center;
+
+        gap: 10px;
+
+        margin-top: 28px;
+    }
+
+    .vaga-btn {
+        min-height: 45px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        padding:
+            0 20px;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+        font-weight: 600;
+
+        text-decoration: none;
+
+        cursor: pointer;
+
+        transition:
+            transform 0.2s ease,
+            filter 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .vaga-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .vaga-btn-primary {
+        border: none;
+
+        background:
+            linear-gradient(135deg,
+                #2563eb,
+                #1d4ed8);
+
+        color: white;
+
+        box-shadow:
+            0 8px 20px rgba(37, 99, 235, 0.22);
+    }
+
+    .vaga-btn-primary:hover {
+        color: white;
+
+        filter: brightness(1.06);
+
+        box-shadow:
+            0 11px 25px rgba(37, 99, 235, 0.30);
+    }
+
+    .vaga-btn-secondary {
+        border:
+            1px solid rgba(255, 255, 255, 0.13);
+
+        background:
+            rgba(255, 255, 255, 0.06);
+
+        color:
+            rgba(255, 255, 255, 0.75);
+    }
+
+    .vaga-btn-secondary:hover {
+        color: white;
+
+        background:
+            rgba(255, 255, 255, 0.10);
+    }
+
+
+    /* =====================================================
+       MOBILE
+       ===================================================== */
+
+    @@media
+    (max-width: 600px) {
+
+        .vaga-form-page {
+            padding:
+                30px 16px 45px;
+        }
+
+        .vaga-form-header h1 {
+            font-size: 28px;
+        }
+
+        .vaga-form-card {
+            padding: 22px;
+        }
+
+        .vaga-form-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .vaga-btn {
+            width: 100%;
+        }
+
+    }
+</style>
+
+
+<div class="vaga-form-page">
+
+    <div class="vaga-form-container">
+
+
+        @* =====================================================
+           CABEÇALHO
+           ===================================================== *@
+
+        <div class="vaga-form-header">
+
+            <h1>
+                Nova vaga
+            </h1>
+
+            <p>
+                Cadastre uma nova oportunidade no JobApply.
+            </p>
+
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Empresa" class="form-label"></label>
-            <input asp-for="Empresa" class="form-control" />
-            <span asp-validation-for="Empresa" class="text-danger"></span>
+
+        @* =====================================================
+           FORMULÁRIO
+           ===================================================== *@
+
+        <div class="vaga-form-card">
+
+            <div class="form-section-title">
+
+                <div class="form-section-icon">
+                    💼
+                </div>
+
+                <span>
+                    Informações da vaga
+                </span>
+
+            </div>
+
+
+            <form asp-action="Create" method="post">
+
+                <div asp-validation-summary="ModelOnly" class="validation-summary">
+                </div>
+
+
+                @* TÍTULO *@
+
+                <div class="vaga-form-group">
+
+                    <label asp-for="Titulo" class="vaga-form-label">
+
+                        Título da vaga
+
+                    </label>
+
+                    <input asp-for="Titulo" class="vaga-form-input"
+                        placeholder="Ex: Estágio em Tecnologia da Informação" />
+
+                    <span asp-validation-for="Titulo" class="validation-message">
+                    </span>
+
+                </div>
+
+
+                @* EMPRESA *@
+
+                <div class="vaga-form-group">
+
+                    <label asp-for="Empresa" class="vaga-form-label">
+
+                        Empresa
+
+                    </label>
+
+                    <input asp-for="Empresa" class="vaga-form-input" placeholder="Nome da empresa" />
+
+                    <span asp-validation-for="Empresa" class="validation-message">
+                    </span>
+
+                </div>
+
+
+                @* LOCALIZAÇÃO *@
+
+                <div class="vaga-form-group">
+
+                    <label asp-for="Localizacao" class="vaga-form-label">
+
+                        Localização
+
+                    </label>
+
+                    <input asp-for="Localizacao" class="vaga-form-input" placeholder="Ex: São Paulo - SP" />
+
+                    <span asp-validation-for="Localizacao" class="validation-message">
+                    </span>
+
+                </div>
+
+
+                @* LINK *@
+
+                <div class="vaga-form-group">
+
+                    <label asp-for="Link" class="vaga-form-label">
+
+                        Link da vaga
+
+                    </label>
+
+                    <input asp-for="Link" class="vaga-form-input" placeholder="https://..." />
+
+                    <span asp-validation-for="Link" class="validation-message">
+                    </span>
+
+                </div>
+
+
+                <div class="form-divider"></div>
+
+
+                @* STATUS *@
+
+                <div class="vaga-form-group">
+
+                    <label asp-for="Status" class="vaga-form-label">
+
+                        Status da candidatura
+
+                    </label>
+
+                    <select asp-for="Status" class="vaga-form-select">
+
+                        <option value="Interessado">
+                            Interessado
+                        </option>
+
+                        <option value="Candidatado">
+                            Candidatado
+                        </option>
+
+                        <option value="Entrevista">
+                            Entrevista
+                        </option>
+
+                        <option value="Recusado">
+                            Recusado
+                        </option>
+
+                        <option value="Aprovado">
+                            Aprovado
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="Status" class="validation-message">
+                    </span>
+
+                </div>
+
+
+                @* BOTÕES *@
+
+                <div class="vaga-form-actions">
+
+                    <button type="submit" class="vaga-btn vaga-btn-primary">
+
+                        💾
+                        &nbsp;
+                        Salvar vaga
+
+                    </button>
+
+
+                    <a asp-action="Index" class="vaga-btn vaga-btn-secondary">
+
+                        ←
+                        &nbsp;
+                        Cancelar
+
+                    </a>
+
+                </div>
+
+            </form>
+
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Localizacao" class="form-label"></label>
-            <input asp-for="Localizacao" class="form-control" />
-            <span asp-validation-for="Localizacao" class="text-danger"></span>
-        </div>
+    </div>
 
-        <div class="mb-3">
-            <label asp-for="Link" class="form-label"></label>
-            <input asp-for="Link" class="form-control" />
-            <span asp-validation-for="Link" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="Status" class="form-label"></label>
-
-            <select asp-for="Status" class="form-select">
-                <option value="Interessado">Interessado</option>
-                <option value="Candidatado">Candidatado</option>
-                <option value="Entrevista">Entrevista</option>
-                <option value="Recusado">Recusado</option>
-                <option value="Aprovado">Aprovado</option>
-            </select>
-
-            <span asp-validation-for="Status" class="text-danger"></span>
-        </div>
-
-        <button type="submit" class="btn btn-primary">
-            Salvar
-        </button>
-
-        <a asp-action="Index" class="btn btn-secondary">
-            Cancelar
-        </a>
-
-    </form>
 </div>
 
+
 @section Scripts {
-<partial name="_ValidationScriptsPartial" />
+
+    <partial name="_ValidationScriptsPartial" />
+
 }

@@ -4,81 +4,595 @@
     ViewData["Title"] = "Excluir usuário";
 }
 
-<div class="mb-4">
+<div class="usuario-delete-page">
 
-    <h1 class="h3 mb-1">
-        Excluir usuário
-    </h1>
+    ```
+    <!-- CABEÇALHO -->
+    <div class="usuario-delete-header">
 
-    <p class="text-muted">
-        Confirme a exclusão do usuário.
-    </p>
+        <div>
+            <h1>Excluir usuário</h1>
 
-</div>
-
-<div class="card shadow-sm">
-
-    <div class="card-body">
-
-        <div class="alert alert-warning">
-            Esta ação não pode ser desfeita.
+            <p>
+                Confirme a exclusão do usuário.
+            </p>
         </div>
 
-        <dl class="row">
-
-            <dt class="col-sm-3">
-                Nome
-            </dt>
-
-            <dd class="col-sm-9">
-                @Model.Nome
-            </dd>
-
-            <dt class="col-sm-3">
-                E-mail
-            </dt>
-
-            <dd class="col-sm-9">
-                @(string.IsNullOrWhiteSpace(Model.Email)
-                    ? "Não informado"
-                    : Model.Email)
-            </dd>
-
-            <dt class="col-sm-3">
-                Status
-            </dt>
-
-            <dd class="col-sm-9">
-                @(Model.Ativo ? "Ativo" : "Inativo")
-            </dd>
-
-        </dl>
-
-        <form asp-action="ConfirmarExclusao"
-              method="post">
-
-            @Html.AntiForgeryToken()
-
-            <input type="hidden"
-                   name="id"
-                   value="@Model.Id" />
-
-            <div class="d-flex gap-2">
-
-                <button type="submit"
-                        class="btn btn-danger">
-                    Confirmar exclusão
-                </button>
-
-                <a asp-action="Index"
-                   class="btn btn-outline-secondary">
-                    Cancelar
-                </a>
-
-            </div>
-
-        </form>
+        <a asp-action="Index" class="voltar-button">
+            ← Voltar
+        </a>
 
     </div>
 
+
+    <!-- CARD DE CONFIRMAÇÃO -->
+    <div class="usuario-delete-card">
+
+        <div class="delete-card-header">
+
+            <div class="delete-icon">
+                ⚠️
+            </div>
+
+            <div>
+                <h2>Confirmar exclusão</h2>
+
+                <p>
+                    Verifique os dados antes de continuar.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="delete-card-body">
+
+            <!-- AVISO -->
+            <div class="delete-warning">
+
+                <div class="warning-icon">
+                    !
+                </div>
+
+                <div>
+                    <strong>Esta ação não pode ser desfeita.</strong>
+
+                    <p>
+                        O usuário será removido do sistema permanentemente.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- DADOS -->
+            <div class="usuario-delete-info">
+
+                <div class="info-item">
+
+                    <span class="info-label">
+                        Nome
+                    </span>
+
+                    <span class="info-value">
+                        @Model.Nome
+                    </span>
+
+                </div>
+
+
+                <div class="info-item">
+
+                    <span class="info-label">
+                        E-mail
+                    </span>
+
+                    <span class="info-value">
+
+                        @(string.IsNullOrWhiteSpace(Model.Email)
+                                                ? "Não informado"
+                                                : Model.Email)
+
+                    </span>
+
+                </div>
+
+
+                <div class="info-item">
+
+                    <span class="info-label">
+                        Status
+                    </span>
+
+                    <span class="info-value">
+
+                        @if (Model.Ativo)
+                        {
+                            <span class="status-badge status-ativo">
+                                <span class="status-dot"></span>
+                                Ativo
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-inativo">
+                                <span class="status-dot"></span>
+                                Inativo
+                            </span>
+                        }
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- AÇÕES -->
+            <form asp-action="ConfirmarExclusao" method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div class="delete-actions">
+
+                    <button type="submit" class="confirm-delete-button">
+                        Confirmar exclusão
+                    </button>
+
+                    <a asp-action="Index" class="cancel-delete-button">
+                        Cancelar
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+    ```
+
 </div>
+
+<style>
+    /* =====================================================
+       PÁGINA
+       ===================================================== */
+
+    .usuario-delete-page {
+        width: 100%;
+        max-width: 850px;
+
+        margin: 0 auto;
+
+        padding: 20px 24px 50px;
+
+        box-sizing: border-box;
+    }
+
+
+    /* =====================================================
+       CABEÇALHO
+       ===================================================== */
+
+    .usuario-delete-header {
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 20px;
+
+        margin-bottom: 28px;
+    }
+
+    .usuario-delete-header h1 {
+        margin: 0;
+
+        color: #ffffff;
+
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .usuario-delete-header p {
+        margin: 7px 0 0;
+
+        color: #94a3b8;
+
+        font-size: 15px;
+    }
+
+
+    /* =====================================================
+       VOLTAR
+       ===================================================== */
+
+    .voltar-button {
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 42px;
+
+        padding: 0 16px;
+
+        border-radius: 10px;
+
+        background: rgba(255, 255, 255, 0.08);
+
+        border: 1px solid rgba(255, 255, 255, 0.12);
+
+        color: #e2e8f0;
+
+        text-decoration: none;
+
+        font-size: 13px;
+        font-weight: 600;
+
+        transition: 0.2s ease;
+    }
+
+    .voltar-button:hover {
+        color: #ffffff;
+
+        background: rgba(255, 255, 255, 0.13);
+    }
+
+
+    /* =====================================================
+       CARD
+       ===================================================== */
+
+    .usuario-delete-card {
+        overflow: hidden;
+
+        background: rgba(255, 255, 255, 0.97);
+
+        border-radius: 18px;
+
+        box-shadow:
+            0 20px 45px rgba(0, 0, 0, 0.18);
+    }
+
+
+    /* =====================================================
+       CABEÇALHO DO CARD
+       ===================================================== */
+
+    .delete-card-header {
+        display: flex;
+
+        align-items: center;
+
+        gap: 14px;
+
+        padding: 22px 26px;
+
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .delete-icon {
+        width: 46px;
+        height: 46px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        background: #fef2f2;
+
+        font-size: 21px;
+    }
+
+    .delete-card-header h2 {
+        margin: 0;
+
+        color: #0f172a;
+
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .delete-card-header p {
+        margin: 4px 0 0;
+
+        color: #64748b;
+
+        font-size: 13px;
+    }
+
+
+    /* =====================================================
+       CORPO
+       ===================================================== */
+
+    .delete-card-body {
+        padding: 28px 26px;
+    }
+
+
+    /* =====================================================
+       AVISO
+       ===================================================== */
+
+    .delete-warning {
+        display: flex;
+
+        align-items: flex-start;
+
+        gap: 12px;
+
+        padding: 15px;
+
+        margin-bottom: 25px;
+
+        border-radius: 12px;
+
+        background: #fff7ed;
+
+        border: 1px solid #fed7aa;
+
+        color: #9a3412;
+    }
+
+    .warning-icon {
+        width: 28px;
+        height: 28px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        flex-shrink: 0;
+
+        border-radius: 50%;
+
+        background: #ffedd5;
+
+        color: #c2410c;
+
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .delete-warning strong {
+        display: block;
+
+        margin-bottom: 3px;
+
+        font-size: 13px;
+    }
+
+    .delete-warning p {
+        margin: 0;
+
+        color: #c2410c;
+
+        font-size: 12px;
+    }
+
+
+    /* =====================================================
+       DADOS DO USUÁRIO
+       ===================================================== */
+
+    .usuario-delete-info {
+        overflow: hidden;
+
+        margin-bottom: 28px;
+
+        border: 1px solid #e2e8f0;
+
+        border-radius: 12px;
+
+        background: #f8fafc;
+    }
+
+    .info-item {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 20px;
+
+        padding: 15px 17px;
+
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #64748b;
+
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .info-value {
+        color: #0f172a;
+
+        font-size: 14px;
+
+        text-align: right;
+
+        word-break: break-word;
+    }
+
+
+    /* =====================================================
+       STATUS
+       ===================================================== */
+
+    .status-badge {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        padding: 6px 10px;
+
+        border-radius: 999px;
+
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: currentColor;
+    }
+
+    .status-ativo {
+        background: #dcfce7;
+
+        color: #166534;
+    }
+
+    .status-inativo {
+        background: #f1f5f9;
+
+        color: #64748b;
+    }
+
+
+    /* =====================================================
+       AÇÕES
+       ===================================================== */
+
+    .delete-actions {
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+    }
+
+    .confirm-delete-button,
+    .cancel-delete-button {
+        min-height: 44px;
+
+        padding: 0 19px;
+
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+        font-weight: 600;
+
+        text-decoration: none;
+
+        cursor: pointer;
+
+        transition: 0.2s ease;
+    }
+
+    .confirm-delete-button {
+        border: none;
+
+        color: #ffffff;
+
+        background: #dc2626;
+
+        box-shadow:
+            0 8px 18px rgba(220, 38, 38, 0.20);
+    }
+
+    .confirm-delete-button:hover {
+        background: #b91c1c;
+
+        transform: translateY(-1px);
+
+        box-shadow:
+            0 11px 23px rgba(220, 38, 38, 0.28);
+    }
+
+    .cancel-delete-button {
+        color: #475569;
+
+        background: #f1f5f9;
+
+        border: 1px solid #e2e8f0;
+    }
+
+    .cancel-delete-button:hover {
+        color: #0f172a;
+
+        background: #e2e8f0;
+    }
+
+
+    /* =====================================================
+       RESPONSIVO
+       ===================================================== */
+
+    @@media (max-width: 650px) {
+
+        .usuario-delete-page {
+            padding: 15px 14px 40px;
+        }
+
+        .usuario-delete-header {
+            flex-direction: column;
+
+            align-items: stretch;
+        }
+
+        .usuario-delete-header h1 {
+            font-size: 28px;
+        }
+
+        .voltar-button {
+            width: 100%;
+        }
+
+        .delete-card-header {
+            padding: 18px;
+        }
+
+        .delete-card-body {
+            padding: 22px 18px;
+        }
+
+        .info-item {
+            align-items: flex-start;
+
+            flex-direction: column;
+
+            gap: 5px;
+        }
+
+        .info-value {
+            text-align: left;
+        }
+
+        .delete-actions {
+            flex-direction: column;
+        }
+
+        .confirm-delete-button,
+        .cancel-delete-button {
+            width: 100%;
+        }
+
+    }
+</style>

@@ -12,6 +12,7 @@ namespace JobApply.Controllers
     public class ContaController : Controller
     {
         private readonly AppDbContext _context;
+
         private readonly IPasswordHasher<Usuario>
             _passwordHasher;
 
@@ -70,6 +71,8 @@ namespace JobApply.Controllers
                     "Nome ou senha inválidos."
                 );
 
+                ViewBag.ReturnUrl = returnUrl;
+
                 return View(model);
             }
 
@@ -90,8 +93,14 @@ namespace JobApply.Controllers
                     "Nome ou senha inválidos."
                 );
 
+                ViewBag.ReturnUrl = returnUrl;
+
                 return View(model);
             }
+
+            // =====================================================
+            // CLAIMS
+            // =====================================================
 
             var claims = new List<Claim>
             {
@@ -106,8 +115,11 @@ namespace JobApply.Controllers
                 )
             };
 
-            if (!string.IsNullOrWhiteSpace(
-                usuario.Email))
+            if (
+                !string.IsNullOrWhiteSpace(
+                    usuario.Email
+                )
+            )
             {
                 claims.Add(
                     new Claim(
@@ -127,11 +139,19 @@ namespace JobApply.Controllers
             var principal =
                 new ClaimsPrincipal(identity);
 
+            // =====================================================
+            // LOGIN
+            // =====================================================
+
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults
                     .AuthenticationScheme,
                 principal
             );
+
+            // =====================================================
+            // REDIRECIONAMENTO
+            // =====================================================
 
             if (
                 !string.IsNullOrWhiteSpace(returnUrl)
@@ -147,7 +167,6 @@ namespace JobApply.Controllers
                 "Home"
             );
         }
-        
 
         // =========================================================
         // LOGOUT
@@ -168,19 +187,4 @@ namespace JobApply.Controllers
             );
         }
     }
-
-    // =============================================================
-    // VIEW MODELS
-    // =============================================================
-
-    public class LoginViewModel
-    {
-        public string Nome { get; set; } =
-            string.Empty;
-
-        public string Senha { get; set; } =
-            string.Empty;
-    }
-
-    
 }
