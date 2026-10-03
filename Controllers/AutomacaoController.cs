@@ -1,7 +1,9 @@
+using JobApply.Data;
 using JobApply.Models;
 using JobApply.Services;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace JobApply.Controllers
 {
@@ -9,28 +11,59 @@ namespace JobApply.Controllers
     public class AutomacaoController : Controller
     {
         private readonly LinkedInService _linkedInService;
+        private readonly AppDbContext _context;
 
         public AutomacaoController(
-            LinkedInService linkedInService)
+            LinkedInService linkedInService,
+            AppDbContext context)
         {
             _linkedInService = linkedInService;
+            _context = context;
         }
 
+        [HttpGet]
         public async Task<IActionResult> Index(
-                                                string? busca,
-                                                string? localizacao,
-                                                string? periodo,
-                                                bool aposCandidatura = false)
+            string? busca,
+            string? localizacao,
+            string? periodo,
+            bool aposCandidatura = false)
         {
             var vagas = new List<VagaLinkedIn>();
 
             if (!string.IsNullOrWhiteSpace(busca))
             {
-                vagas =
+                Console.WriteLine("==========================================");
+                Console.WriteLine("INICIANDO PESQUISA PELO CONTROLLER");
+                Console.WriteLine($"BUSCA: {busca}");
+                Console.WriteLine($"LOCALIZAÇÃO: {localizacao}");
+                Console.WriteLine($"PERÍODO: {periodo}");
+                Console.WriteLine("==========================================");
+
+                var resultado =
                     await _linkedInService.BuscarVagasAsync(
                         busca,
                         localizacao,
                         periodo);
+
+                if (resultado == null)
+                {
+                    TempData["MensagemCandidatura"] =
+                        "Não foi possível concluir a pesquisa. Faça login no LinkedIn na janela do navegador e tente novamente.";
+
+                    TempData["TipoMensagem"] = "warning";
+
+                    ViewBag.Busca = busca;
+                    ViewBag.Localizacao = localizacao;
+                    ViewBag.Periodo = periodo;
+                    ViewBag.AposCandidatura = aposCandidatura;
+
+                    return View(vagas);
+                }
+
+                vagas = resultado;
+
+                Console.WriteLine(
+                    $"PESQUISA FINALIZADA. VAGAS ENCONTRADAS: {vagas.Count}");
             }
 
             ViewBag.Busca = busca;
@@ -46,108 +79,231 @@ namespace JobApply.Controllers
         {
             if (string.IsNullOrWhiteSpace(link))
             {
-                TempData["MensagemCandidatura"] =
-                    "Link da vaga não informado.";
-
-                TempData["TipoMensagem"] = "danger";
-
-                return RedirectToAction(nameof(Index));
+                return Json(new
+                {
+                    sucesso = false,
+                    mensagem = "Link da vaga não informado.",
+                    tipo = "danger"
+                });
             }
 
-            var resultado =
-                await _linkedInService.CandidatarAsync(link);
-
-            switch (resultado)
+            try
             {
-                case "LOGIN_LINKEDIN":
+                // ==========================================
+                // USUÁRIO LOGADO
+                // ==========================================
 
-                    TempData["MensagemCandidatura"] =
-                        "O LinkedIn está solicitando login. Faça o login no navegador aberto para continuar.";
+                var usuarioIdClaim =
+                                User.FindFirstValue(
+                                    ClaimTypes.NameIdentifier
+                                );
 
-                    TempData["TipoMensagem"] = "warning";
+                if (!int.TryParse(usuarioIdClaim, out int usuarioId))
+                {
+                    return Json(new
+                    {
+                        sucesso = false,
+                        mensagem = "Não foi possível identificar o usuário logado.",
+                        tipo = "danger"
+                    });
+                }
 
-                    break;
+                var usuario =
+                    await _context.Usuarios.FindAsync(usuarioId);
 
-                case "LOGIN_SITE_EXTERNO":
+                if (usuario == null || !usuario.Ativo)
+                {
+                    return Json(new
+                    {
+                        sucesso = false,
+                        mensagem = "Usuário não encontrado ou inativo.",
+                        tipo = "danger"
+                    });
+                }
 
-                    TempData["MensagemCandidatura"] =
-                        "O site da empresa está solicitando login. Faça o login no navegador aberto para continuar.";
+                // ==========================================
+                // VALIDAR DADOS DA CANDIDATURA
+                // ==========================================
 
-                    TempData["TipoMensagem"] = "warning";
+                if (string.IsNullOrWhiteSpace(usuario.Email))
+                {
+                    return Json(new
+                    {
+                        sucesso = false,
+                        mensagem = "O usuário não possui e-mail cadastrado.",
+                        tipo = "warning"
+                    });
+                }
 
-                    break;
+                if (string.IsNullOrWhiteSpace(usuario.Telefone))
+                {
+                    return Json(new
+                    {
+                        sucesso = false,
+                        mensagem = "O usuário não possui telefone cadastrado.",
+                        tipo = "warning"
+                    });
+                }
 
-                case "CANDIDATURA_EXTERNA_ABERTA":
+                if (string.IsNullOrWhiteSpace(usuario.Pais))
+                {
+                    return Json(new
+                    {
+                        sucesso = false,
+                        mensagem = "O usuário não possui país cadastrado.",
+                        tipo = "warning"
+                    });
+                }
 
-                    TempData["MensagemCandidatura"] =
-                        "Site da empresa aberto. A candidatura externa está pronta para continuar.";
+                Console.WriteLine("==========================================");
+                Console.WriteLine("INICIANDO CANDIDATURA");
+                Console.WriteLine($"LINK: {link}");
+                Console.WriteLine($"USUÁRIO: {usuario.Nome}");
+                Console.WriteLine($"E-MAIL: {usuario.Email}");
+                Console.WriteLine($"TELEFONE: {usuario.Telefone}");
+                Console.WriteLine($"PAÍS: {usuario.Pais}");
+                Console.WriteLine("==========================================");
 
-                    TempData["TipoMensagem"] = "success";
+                var resultado =
+                    await _linkedInService.CandidatarAsync(
+                        link,
+                        usuario
+                    );
 
-                    break;
+                switch (resultado)
+                {
+                    case "LOGIN_LINKEDIN":
+                        return Json(new
+                        {
+                            sucesso = false,
+                            mensagem =
+                                "O LinkedIn está solicitando login. Faça o login na janela do navegador para continuar.",
+                            tipo = "warning"
+                        });
 
-                case "CANDIDATURA_LINKEDIN_ABERTA":
+                    case "LOGIN_SITE_EXTERNO":
+                        return Json(new
+                        {
+                            sucesso = false,
+                            mensagem =
+                                "O site da empresa está solicitando login. Faça o login na janela do navegador para continuar.",
+                            tipo = "warning"
+                        });
 
-                    TempData["MensagemCandidatura"] =
-                        "Formulário de candidatura do LinkedIn aberto.";
+                    case "CANDIDATURA_EXTERNA_ABERTA":
+                        return Json(new
+                        {
+                            sucesso = true,
+                            mensagem =
+                                "Site da empresa aberto. A candidatura externa está pronta para continuar.",
+                            tipo = "success"
+                        });
 
-                    TempData["TipoMensagem"] = "success";
+                    case "CANDIDATURA_LINKEDIN_ABERTA":
+                        return Json(new
+                        {
+                            sucesso = true,
+                            mensagem =
+                                "Formulário de candidatura do LinkedIn aberto.",
+                            tipo = "success"
+                        });
 
-                    break;
+                    case "LINK_EXTERNO_NAO_ENCONTRADO":
+                        return Json(new
+                        {
+                            sucesso = false,
+                            mensagem =
+                                "A candidatura externa foi encontrada, mas o link não foi localizado.",
+                            tipo = "danger"
+                        });
 
-                case "LINK_EXTERNO_NAO_ENCONTRADO":
+                    case "CANDIDATURA_NAO_ENCONTRADA":
+                        return Json(new
+                        {
+                            sucesso = false,
+                            mensagem =
+                                "Não foi possível localizar o próximo passo da candidatura.",
+                            tipo = "warning"
+                        });
 
-                    TempData["MensagemCandidatura"] =
-                        "A candidatura externa foi encontrada, mas o link não foi localizado.";
+                    case "CANDIDATURA_GUPY_ABERTA":
+                        return Json(new
+                        {
+                            sucesso = true,
+                            mensagem =
+                                "Candidatura da Gupy aberta.",
+                            tipo = "success"
+                        });
 
-                    TempData["TipoMensagem"] = "danger";
+                    case "CANDIDATURA_GUPY_NAO_ENCONTRADA":
+                        return Json(new
+                        {
+                            sucesso = false,
+                            mensagem =
+                                "A página da Gupy foi aberta, mas o botão Candidatar-se não foi encontrado.",
+                            tipo = "warning"
+                        });
 
-                    break;
-
-                case "CANDIDATURA_NAO_ENCONTRADA":
-
-                    TempData["MensagemCandidatura"] =
-                        "Não foi possível localizar o próximo passo da candidatura.";
-
-                    TempData["TipoMensagem"] = "warning";
-
-                    break;
-
-                case "CANDIDATURA_GUPY_ABERTA":
-
-                    TempData["MensagemCandidatura"] =
-                        "Candidatura da Gupy aberta.";
-
-                    TempData["TipoMensagem"] = "success";
-
-                    break;
-
-                case "CANDIDATURA_GUPY_NAO_ENCONTRADA":
-
-                    TempData["MensagemCandidatura"] =
-                        "A página da Gupy foi aberta, mas o botão Candidatar-se não foi encontrado.";
-
-                    TempData["TipoMensagem"] = "warning";
-
-                    break;
-
-                default:
-
-                    TempData["MensagemCandidatura"] =
-                        "Não foi possível identificar o processo de candidatura.";
-
-                    TempData["TipoMensagem"] = "warning";
-
-                    break;
+                    default:
+                        return Json(new
+                        {
+                            sucesso = false,
+                            mensagem =
+                                "Não foi possível identificar o processo de candidatura.",
+                            tipo = "warning"
+                        });
+                }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    "==========================================");
 
-            // IMPORTANTE:
-            // Não fazemos RedirectToAction(Index) aqui.
-            // Isso evita executar novamente a busca no LinkedIn.
+                Console.WriteLine(
+                    $"ERRO AO PROCESSAR CANDIDATURA: {ex.Message}");
 
-            return RedirectToAction(nameof(Index));
+                Console.WriteLine(
+                    "==========================================");
+
+                return Json(new
+                {
+                    sucesso = false,
+                    mensagem =
+                        "Ocorreu um erro ao tentar iniciar a candidatura.",
+                    tipo = "danger"
+                });
+            }
         }
 
-    }
+        [HttpGet]
+        public async Task<IActionResult> Detalhes(string link)
+        {
+            if (string.IsNullOrWhiteSpace(link))
+            {
+                return BadRequest(new
+                {
+                    sucesso = false,
+                    mensagem = "Link da vaga não informado."
+                });
+            }
 
+            var detalhes =
+                await _linkedInService.ObterDetalhesVagaAsync(link);
+
+            if (detalhes == null)
+            {
+                return BadRequest(new
+                {
+                    sucesso = false,
+                    mensagem = "Não foi possível obter os detalhes da vaga."
+                });
+            }
+
+            return Json(new
+            {
+                sucesso = true,
+                dados = detalhes
+            });
+        }
+    }
 }

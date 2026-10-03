@@ -99,6 +99,8 @@
                             <th>E-mail</th>
                             <th>Status</th>
                             <th>Data do Cadastro</th>
+                            <th>TELEFONE</th>
+                            <th>PAIS</th>
                             <th class="acoes-column">
                                 Ações
                             </th>
@@ -182,6 +184,38 @@
 
                                 </td>
 
+                                <!-- TELEFONE -->
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(usuario.Telefone))
+                                    {
+                                        <span class="usuario-muted">
+                                            Não informado
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="usuario-telefone">
+                                            @usuario.Telefone
+                                        </span>
+                                    }
+                                </td>
+
+
+                                <!-- PAÍS -->
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(usuario.Pais))
+                                    {
+                                        <span class="usuario-muted">
+                                            Não informado
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="usuario-pais">
+                                            @usuario.Pais
+                                        </span>
+                                    }
+                                </td>
 
                                 <!-- AÇÕES -->
                                 <td class="acoes-column">
@@ -551,8 +585,8 @@
 
 
     /* =====================================================
-       EMAIL
-       ===================================================== */
+   EMAIL
+   ===================================================== */
 
     .usuario-email {
         color: #475569;
@@ -560,10 +594,26 @@
 
     .usuario-muted {
         color: #94a3b8;
-
         font-style: italic;
     }
 
+
+    /* =====================================================
+   TELEFONE
+   ===================================================== */
+
+    .usuario-telefone {
+        color: #64748b;
+    }
+
+
+    /* =====================================================
+   PAÍS
+   ===================================================== */
+
+    .usuario-pais {
+        color: #64748b;
+    }
 
     /* =====================================================
        STATUS

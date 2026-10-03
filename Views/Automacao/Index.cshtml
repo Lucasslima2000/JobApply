@@ -1,943 +1,1242 @@
-
-@model List<JobApply.Models.VagaLinkedIn>
+@model IEnumerable<JobApply.Models.VagaLinkedIn>
 
 @{
     ViewData["Title"] = "Automação";
+
+    var vagas = Model?.ToList() ?? new List<JobApply.Models.VagaLinkedIn>();
+
+    var buscaAtual = ViewBag.Busca as string ?? "";
+    var localizacaoAtual = ViewBag.Localizacao as string ?? "";
+    var periodoAtual = ViewBag.Periodo as string ?? "";
 }
-
-<style>
-
-    /* =====================================================
-       PÁGINA
-       ===================================================== */
-
-    .automacao-page {
-        width: 100%;
-        min-height: calc(100vh - 68px);
-
-        padding: 45px 30px 60px;
-    }
-
-    .automacao-container {
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-
-    /* =====================================================
-       CABEÇALHO
-       ===================================================== */
-
-    .automacao-header {
-        margin-bottom: 30px;
-    }
-
-    .automacao-header h1 {
-        margin: 0;
-
-        color: white;
-
-        font-size: 34px;
-        font-weight: 700;
-
-        letter-spacing: -1px;
-    }
-
-    .automacao-header p {
-        margin: 9px 0 0;
-
-        color:
-            rgba(255, 255, 255, 0.62);
-
-        font-size: 15px;
-    }
-
-
-    /* =====================================================
-       PAINEL DE FILTROS
-       ===================================================== */
-
-    .filtros-card {
-        padding: 28px;
-
-        border:
-            1px solid rgba(255, 255, 255, 0.10);
-
-        border-radius: 20px;
-
-        background:
-            rgba(255, 255, 255, 0.07);
-
-        box-shadow:
-            0 20px 45px rgba(0, 0, 0, 0.16);
-
-        backdrop-filter: blur(14px);
-    }
-
-    .filtros-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-
-        margin-bottom: 23px;
-
-        color: white;
-
-        font-size: 17px;
-        font-weight: 600;
-    }
-
-    .filtros-title-icon {
-        width: 34px;
-        height: 34px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 9px;
-
-        background:
-            rgba(37, 99, 235, 0.20);
-
-        font-size: 16px;
-    }
-
-
-    /* =====================================================
-       CAMPOS
-       ===================================================== */
-
-    .filtro-label {
-        display: block;
-
-        margin-bottom: 8px;
-
-        color:
-            rgba(255, 255, 255, 0.78);
-
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .filtro-input,
-    .filtro-select {
-        width: 100%;
-        height: 48px;
-
-        padding:
-            0 14px;
-
-        border:
-            1px solid rgba(255, 255, 255, 0.13);
-
-        border-radius: 11px;
-
-        outline: none;
-
-        background:
-            rgba(15, 23, 42, 0.65);
-
-        color: white;
-
-        font-size: 14px;
-
-        transition:
-            border-color 0.2s ease,
-            box-shadow 0.2s ease,
-            background 0.2s ease;
-    }
-
-    .filtro-input::placeholder {
-        color:
-            rgba(255, 255, 255, 0.38);
-    }
-
-    .filtro-input:hover,
-    .filtro-select:hover {
-        border-color:
-            rgba(255, 255, 255, 0.25);
-    }
-
-    .filtro-input:focus,
-    .filtro-select:focus {
-        background:
-            rgba(15, 23, 42, 0.85);
-
-        border-color:
-            #2563eb;
-
-        box-shadow:
-            0 0 0 3px rgba(37, 99, 235, 0.15);
-    }
-
-    .filtro-select option {
-        background: #0f172a;
-        color: white;
-    }
-
-
-    /* =====================================================
-       BOTÃO BUSCAR
-       ===================================================== */
-
-    .buscar-area {
-        margin-top: 23px;
-    }
-
-    .btn-buscar {
-        height: 48px;
-
-        padding:
-            0 22px;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-
-        border: none;
-        border-radius: 11px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #2563eb,
-                #1d4ed8
-            );
-
-        color: white;
-
-        font-size: 14px;
-        font-weight: 600;
-
-        cursor: pointer;
-
-        box-shadow:
-            0 8px 20px rgba(37, 99, 235, 0.22);
-
-        transition:
-            transform 0.2s ease,
-            box-shadow 0.2s ease,
-            filter 0.2s ease;
-    }
-
-    .btn-buscar:hover {
-        color: white;
-
-        filter: brightness(1.06);
-
-        transform: translateY(-1px);
-
-        box-shadow:
-            0 12px 25px rgba(37, 99, 235, 0.30);
-    }
-
-
-    /* =====================================================
-       MENSAGEM
-       ===================================================== */
-
-    .mensagem-candidatura {
-        margin-bottom: 25px;
-
-        padding: 14px 17px;
-
-        border-radius: 12px;
-
-        border:
-            1px solid rgba(255, 255, 255, 0.10);
-    }
-
-
-    /* =====================================================
-       CABEÇALHO DOS RESULTADOS
-       ===================================================== */
-
-    .resultados-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 20px;
-
-        margin-top: 40px;
-        margin-bottom: 22px;
-    }
-
-    .resultados-header h2 {
-        margin: 0;
-
-        color: white;
-
-        font-size: 22px;
-        font-weight: 650;
-    }
-
-    .resultado-contador {
-        padding:
-            7px 12px;
-
-        border:
-            1px solid rgba(37, 99, 235, 0.25);
-
-        border-radius: 20px;
-
-        background:
-            rgba(37, 99, 235, 0.12);
-
-        color:
-            #93c5fd;
-
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-
-    /* =====================================================
-       CARDS DAS VAGAS
-       ===================================================== */
-
-    .vaga-card {
-        height: 100%;
-
-        display: flex;
-        flex-direction: column;
-
-        padding: 23px;
-
-        border:
-            1px solid rgba(255, 255, 255, 0.09);
-
-        border-radius: 18px;
-
-        background:
-            rgba(255, 255, 255, 0.96);
-
-        box-shadow:
-            0 15px 35px rgba(0, 0, 0, 0.15);
-
-        transition:
-            transform 0.22s ease,
-            box-shadow 0.22s ease,
-            border-color 0.22s ease;
-    }
-
-    .vaga-card:hover {
-        transform: translateY(-4px);
-
-        border-color:
-            rgba(255, 255, 255, 0.20);
-
-        box-shadow:
-            0 22px 45px rgba(0, 0, 0, 0.23);
-    }
-
-    .vaga-card-top {
-        flex: 1;
-    }
-
-    .vaga-icon {
-        width: 45px;
-        height: 45px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        margin-bottom: 17px;
-
-        border-radius: 12px;
-
-        background:
-            #eff6ff;
-
-        font-size: 20px;
-    }
-
-    .vaga-title {
-        margin: 0 0 15px;
-
-        color: #111827;
-
-        font-size: 17px;
-        font-weight: 700;
-
-        line-height: 1.35;
-    }
-
-    .vaga-info {
-        margin-bottom: 9px;
-
-        color: #6b7280;
-
-        font-size: 13px;
-
-        line-height: 1.5;
-    }
-
-    .vaga-info strong {
-        color: #374151;
-        font-weight: 600;
-    }
-
-
-    /* =====================================================
-       PUBLICAÇÃO
-       ===================================================== */
-
-    .vaga-publicacao {
-        display: inline-flex;
-
-        margin-top: 5px;
-        margin-bottom: 10px;
-
-        padding:
-            5px 9px;
-
-        border-radius: 7px;
-
-        background:
-            #f3f4f6;
-
-        color:
-            #6b7280;
-
-        font-size: 11px;
-    }
-
-
-    /* =====================================================
-       STATUS LINKEDIN
-       ===================================================== */
-
-    .vaga-status {
-        display: inline-flex;
-        align-items: center;
-
-        margin-top: 2px;
-        margin-bottom: 18px;
-
-        padding:
-            5px 9px;
-
-        border-radius: 7px;
-
-        background:
-            #eff6ff;
-
-        color:
-            #2563eb;
-
-        font-size: 11px;
-        font-weight: 600;
-    }
-
-
-    /* =====================================================
-       BOTÕES DA VAGA
-       ===================================================== */
-
-    .vaga-actions {
-        display: flex;
-
-        gap: 8px;
-
-        margin-top: 20px;
-    }
-
-    .vaga-button {
-        flex: 1;
-
-        min-height: 40px;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-        padding:
-            0 10px;
-
-        border-radius: 9px;
-
-        font-size: 12px;
-        font-weight: 600;
-
-        text-decoration: none;
-
-        transition:
-            transform 0.2s ease,
-            filter 0.2s ease;
-    }
-
-    .vaga-button:hover {
-        transform: translateY(-1px);
-        filter: brightness(1.05);
-    }
-
-    .btn-ver-vaga {
-        border:
-            1px solid #dbeafe;
-
-        background:
-            #eff6ff;
-
-        color:
-            #2563eb;
-    }
-
-    .btn-candidatar {
-        border:
-            1px solid #bbf7d0;
-
-        background:
-            #f0fdf4;
-
-        color:
-            #15803d;
-    }
-
-
-    /* =====================================================
-       NENHUMA VAGA
-       ===================================================== */
-
-    .sem-resultados {
-        margin-top: 30px;
-
-        padding: 35px 25px;
-
-        border:
-            1px solid rgba(255, 255, 255, 0.09);
-
-        border-radius: 18px;
-
-        background:
-            rgba(255, 255, 255, 0.06);
-
-        text-align: center;
-
-        color:
-            rgba(255, 255, 255, 0.70);
-    }
-
-    .sem-resultados-icon {
-        margin-bottom: 12px;
-
-        font-size: 32px;
-    }
-
-    .sem-resultados h3 {
-        margin: 0 0 7px;
-
-        color: white;
-
-        font-size: 18px;
-    }
-
-    .sem-resultados p {
-        margin: 0;
-
-        font-size: 13px;
-    }
-
-
-    /* =====================================================
-       RESPONSIVO
-       ===================================================== */
-
-    @@media (max-width: 900px) {
-
-        .automacao-page {
-            padding:
-                35px 22px 50px;
-        }
-
-        .vaga-card {
-            padding: 20px;
-        }
-
-    }
-
-
-    @@media (max-width: 600px) {
-
-        .automacao-page {
-            padding:
-                28px 16px 40px;
-        }
-
-        .automacao-header h1 {
-            font-size: 28px;
-        }
-
-        .filtros-card {
-            padding: 20px;
-        }
-
-        .resultados-header {
-            align-items: flex-start;
-            flex-direction: column;
-
-            gap: 10px;
-        }
-
-        .vaga-actions {
-            flex-direction: column;
-        }
-
-        .vaga-button {
-            width: 100%;
-        }
-
-    }
-
-</style>
-
 
 <div class="automacao-page">
 
-    <div class="automacao-container">
+    <div class="automacao-header">
+        <div>
+            <span class="automacao-badge">Automação de Vagas</span>
 
-
-        @* =====================================================
-           MENSAGEM DA CANDIDATURA
-           ===================================================== *@
-
-        @if (TempData["MensagemCandidatura"] != null)
-        {
-            <div class="alert alert-@TempData["TipoMensagem"] alert-dismissible fade show mensagem-candidatura"
-                 role="alert">
-
-                @TempData["MensagemCandidatura"]
-
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                        aria-label="Fechar">
-                </button>
-
-            </div>
-        }
-
-
-        @* =====================================================
-           CABEÇALHO
-           ===================================================== *@
-
-        <div class="automacao-header">
-
-            <h1>
-                Automação de vagas
-            </h1>
+            @* <h1>Automação de Vagas</h1> *@
 
             <p>
-                Pesquise oportunidades no LinkedIn
-                e execute ações de candidatura pelo JobApply.
+                Pesquise vagas e inicie o processo de candidatura.
             </p>
+        </div>
+    </div>
+
+    @if (TempData["MensagemCandidatura"] != null)
+    {
+        var tipo = TempData["TipoMensagem"]?.ToString() ?? "warning";
+
+        <div id="mensagemTempData" class="automacao-alert automacao-alert-@tipo">
+
+            <span>
+                @TempData["MensagemCandidatura"]
+            </span>
+        </div>
+    }
+
+    <div id="mensagemCandidaturaAjax"></div>
+
+    <div class="filtros-card">
+
+        <form asp-controller="Automacao" asp-action="Index" method="get" id="formBusca">
+
+            <div class="filtro-grupo">
+
+                <label for="site">Site</label>
+
+                <select id="site" name="site" class="filtro-input">
+
+                    <option value="LinkedIn" selected>LinkedIn</option>
+
+                </select>
+            </div>
+
+            <div class="filtro-grupo">
+
+                <label for="busca">O que você procura?</label>
+
+                <input type="text" id="busca" name="busca" value="@buscaAtual" class="filtro-input"
+                    placeholder="Ex.: estágio tecnologia" required />
+            </div>
+
+            <div class="filtro-grupo">
+
+                <label for="localizacao">Localização</label>
+
+                <input type="text" id="localizacao" name="localizacao" value="@localizacaoAtual" class="filtro-input"
+                    placeholder="Ex.: SP" />
+            </div>
+
+            <div class="filtro-grupo">
+
+                <label for="periodo">Publicada</label>
+
+                <select id="periodo" name="periodo" class="filtro-input">
+
+                    @if (periodoAtual == "24h")
+                    {
+                        <option value="24h" selected>Últimas 24 horas</option>
+                    }
+                    else
+                    {
+                        <option value="24h">Últimas 24 horas</option>
+                    }
+
+                    @if (periodoAtual == "semana")
+                    {
+                        <option value="semana" selected>Última semana</option>
+                    }
+                    else
+                    {
+                        <option value="semana">Última semana</option>
+                    }
+
+                    @if (periodoAtual == "mes")
+                    {
+                        <option value="mes" selected>Último mês</option>
+                    }
+                    else
+                    {
+                        <option value="mes">Último mês</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filtro-acao">
+
+                <button type="submit" class="btn-buscar" id="btnBuscar">
+
+                    🔎 Buscar vagas
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    @if (vagas.Any())
+    {
+        <div class="resultado-header">
+
+            <div>
+                <h2>Vagas encontradas</h2>
+
+                <p>
+                    @vagas.Count vaga(s) encontrada(s).
+                </p>
+            </div>
 
         </div>
 
-
-        @* =====================================================
-           FILTROS
-           ===================================================== *@
-
-        <div class="filtros-card">
-
-            <div class="filtros-title">
-
-                <div class="filtros-title-icon">
-                    🔎
-                </div>
-
-                <span>
-                    Pesquisa de vagas
-                </span>
-
-            </div>
-
-
-            <form asp-action="Index"
-                  method="get">
-
-                <div class="row g-3">
-
-
-                    @* SITE *@
-
-                    <div class="col-md-2">
-
-                        <label class="filtro-label">
-                            Site
-                        </label>
-
-                        <select class="filtro-select">
-
-                            <option>
-                                LinkedIn
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    @* BUSCA *@
-
-                    <div class="col-md-4">
-
-                        <label class="filtro-label">
-                            Buscar por
-                        </label>
-
-                        <input type="text"
-                               name="busca"
-                               value="@ViewBag.Busca"
-                               class="filtro-input"
-                               placeholder="Ex: Estágio TI" />
-
-                    </div>
-
-
-                    @* LOCALIZAÇÃO *@
-
-                    <div class="col-md-3">
-
-                        <label class="filtro-label">
-                            Localização
-                        </label>
-
-                        <input type="text"
-                               name="localizacao"
-                               value="@ViewBag.Localizacao"
-                               class="filtro-input"
-                               placeholder="Ex: São Paulo" />
-
-                    </div>
-
-
-                    @* PERÍODO *@
-
-                    <div class="col-md-3">
-
-                        <label class="filtro-label">
-                            Publicação
-                        </label>
-
-                        <select name="periodo"
-                                class="filtro-select">
-
-                            <option value="24h"
-                                    selected="@(ViewBag.Periodo == "24h")">
-
-                                Últimas 24 horas
-
-                            </option>
-
-                            <option value="semana"
-                                    selected="@(ViewBag.Periodo == "semana")">
-
-                                Última semana
-
-                            </option>
-
-                            <option value="mes"
-                                    selected="@(ViewBag.Periodo == "mes")">
-
-                                Último mês
-
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-
-                <div class="buscar-area">
-
-                    <button type="submit"
-                            class="btn-buscar">
-
-                        🔎
-
-                        <span>
-                            Buscar vagas
-                        </span>
-
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-
-        @* =====================================================
-           RESULTADOS
-           ===================================================== *@
-
-        @if (Model.Any())
-        {
-
-            <div class="resultados-header">
-
-                <h2>
-                    Vagas encontradas
-                </h2>
-
-                <span class="resultado-contador">
-
-                    @Model.Count
-                    @(Model.Count == 1 ? "vaga" : "vagas")
-
-                </span>
-
-            </div>
-
-
-            <div class="row g-4">
-
-                @foreach (var vaga in Model)
-                {
-
-                    <div class="col-xl-4 col-md-6">
-
-                        <div class="vaga-card">
-
-                            <div class="vaga-card-top">
-
-
-                                <div class="vaga-icon">
-                                    💼
-                                </div>
-
-
-                                <h3 class="vaga-title">
-
-                                    @vaga.Titulo
-
-                                </h3>
-
-
-                                <p class="vaga-info">
-
-                                    <strong>
-                                        Empresa:
-                                    </strong>
-
-                                    @vaga.Empresa
-
-                                </p>
-
-
-                                <p class="vaga-info">
-
-                                    <strong>
-                                        Localização:
-                                    </strong>
-
-                                    @vaga.Localizacao
-
-                                </p>
-
-
-                                @if (!string.IsNullOrWhiteSpace(vaga.Publicacao))
-                                {
-
-                                    <div class="vaga-publicacao">
-
-                                        🕒
-                                        &nbsp;
-                                        @vaga.Publicacao
-
-                                    </div>
-
-                                }
-
-
-                                @if (!string.IsNullOrWhiteSpace(vaga.StatusLinkedIn))
-                                {
-
-                                    <div class="vaga-status">
-
-                                        ●
-                                        &nbsp;
-                                        @vaga.StatusLinkedIn
-
-                                    </div>
-
-                                }
-
-                            </div>
-
-
-                            @* BOTÕES *@
-
-                            <div class="vaga-actions">
-
-                                <a href="@vaga.Link"
-                                   target="_blank"
-                                   class="vaga-button btn-ver-vaga">
-
-                                    Ver vaga
-
-                                </a>
-
-
-                                <a href="@Url.Action(
-                                    "Candidatar",
-                                    "Automacao",
-                                    new
-                                    {
-                                        link = vaga.Link,
-                                        busca = ViewBag.Busca,
-                                        localizacao = ViewBag.Localizacao,
-                                        periodo = ViewBag.Periodo
-                                    })"
-                                   class="vaga-button btn-candidatar">
-
-                                    Candidatar-se
-
-                                </a>
-
-                            </div>
+        <div class="vagas-grid">
+
+            @foreach (var vaga in vagas)
+            {
+                <div class="vaga-card">
+
+                    <div class="vaga-card-top">
+
+                        <div class="vaga-icone">
+                            💼
+                        </div>
+
+                        <div class="vaga-publicacao">
+
+                            @if (!string.IsNullOrWhiteSpace(vaga.Publicacao))
+                            {
+                                @vaga.Publicacao
+                            }
+                            else
+                            {
+                                <span>Publicação não informada</span>
+                            }
 
                         </div>
 
                     </div>
 
-                }
+                    <div class="vaga-conteudo">
 
-            </div>
+                        <h3>
+                            @vaga.Titulo
+                        </h3>
 
-        }
-        else if (!string.IsNullOrWhiteSpace(ViewBag.Busca))
-        {
+                        <div class="vaga-empresa">
+                            🏢 @vaga.Empresa
+                        </div>
 
-            <div class="sem-resultados">
+                        <div class="vaga-localizacao">
+                            📍 @vaga.Localizacao
+                        </div>
 
-                <div class="sem-resultados-icon">
-                    🔎
+                        @if (!string.IsNullOrWhiteSpace(vaga.StatusLinkedIn))
+                        {
+                            <div class="vaga-status">
+                                @vaga.StatusLinkedIn
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="vaga-acoes">
+
+                        @if (!string.IsNullOrWhiteSpace(vaga.Link))
+                        {
+                            <button type="button" class="vaga-button btn-ver-detalhes" data-titulo="@vaga.Titulo"
+                                data-empresa="@vaga.Empresa" data-localizacao="@vaga.Localizacao" data-publicacao="@vaga.Publicacao"
+                                data-descricao="@vaga.Descricao" data-link="@vaga.Link">
+
+                                Ver detalhes
+                            </button>
+
+                            <button type="button" class="vaga-button btn-candidatar" data-link="@vaga.Link">
+
+                                Candidatar-se
+                            </button>
+                        }
+
+                    </div>
+
                 </div>
+            }
 
-                <h3>
-                    Nenhuma vaga encontrada
-                </h3>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(buscaAtual)
+    && TempData["MensagemCandidatura"] == null)
+    {
+        <div class="sem-vagas">
 
-                <p>
-                    Tente alterar os termos da pesquisa,
-                    localização ou período.
-                </p>
-
+            <div class="sem-vagas-icon">
+                🔎
             </div>
 
-        }
+            <h2>Nenhuma vaga encontrada</h2>
+
+            <p>
+                Não encontramos vagas para os filtros informados.
+                Tente alterar o termo ou o período da pesquisa.
+            </p>
+
+        </div>
+    }
+
+</div>
+<!-- ====================================================== -->
+<!-- MODAL DETALHES DA VAGA -->
+<!-- ====================================================== -->
+
+<div id="modalDetalhesVaga" class="modal-vaga">
+
+    <div class="modal-vaga-conteudo">
+
+        <button type="button" class="modal-vaga-fechar" id="fecharModalVaga">
+            ×
+        </button>
+
+        <div class="modal-vaga-header">
+
+            <span class="modal-vaga-badge">
+                Detalhes da vaga
+            </span>
+
+            <h2 id="modalVagaTitulo">
+                Vaga
+            </h2>
+
+            <div id="modalVagaEmpresa"></div>
+
+            <div id="modalVagaLocalizacao"></div>
+
+            <div id="modalVagaPublicacao"></div>
+
+        </div>
+
+        <div class="modal-vaga-separador"></div>
+
+        <div class="modal-vaga-descricao">
+
+            <h3>Sobre a vaga</h3>
+
+            <div id="modalVagaDescricao">
+            </div>
+
+        </div>
+
+        <div class="modal-vaga-acoes">
+
+            <a id="modalAbrirLinkedIn" href="#" target="_blank" rel="noopener noreferrer" class="modal-btn-linkedin">
+                Abrir no LinkedIn
+            </a>
+
+            <button type="button" id="modalCandidatar" class="modal-btn-candidatar">
+                Candidatar-se
+            </button>
+
+        </div>
 
     </div>
 
 </div>
+
+<style>
+    .automacao-page {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 35px 25px 60px;
+    }
+
+    .automacao-header {
+        margin-bottom: 25px;
+    }
+
+    .automacao-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        background: rgba(37, 99, 235, .15);
+        color: #60a5fa;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .8px;
+        margin-bottom: 10px;
+    }
+
+    .automacao-header h1 {
+        margin: 0;
+        color: white;
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .automacao-header p {
+        margin-top: 8px;
+        color: #94a3b8;
+    }
+
+    .filtros-card {
+        background: rgba(255, 255, 255, .97);
+        border-radius: 18px;
+        padding: 24px;
+        margin-bottom: 35px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, .18);
+    }
+
+    .filtros-card form {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr 1fr 1fr 150px;
+        gap: 18px;
+        align-items: end;
+    }
+
+    .filtro-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filtro-grupo label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 7px;
+    }
+
+    .filtro-input {
+        width: 100%;
+        height: 46px;
+        box-sizing: border-box;
+        border: 1px solid #dbe2ea;
+        border-radius: 10px;
+        padding: 0 13px;
+        background: #f8fafc;
+        color: #0f172a;
+        outline: none;
+    }
+
+    .filtro-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+    }
+
+    .btn-buscar {
+        width: 150px;
+        height: 46px;
+        border: 0;
+        border-radius: 10px;
+        padding: 0 18px;
+        background: #2563eb;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: .2s;
+    }
+
+    .btn-buscar:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .btn-buscar:disabled {
+        opacity: .65;
+        cursor: wait;
+        transform: none;
+    }
+
+    .resultado-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .resultado-header h2 {
+        margin: 0;
+        color: white;
+        font-size: 24px;
+    }
+
+    .resultado-header p {
+        margin: 5px 0 0;
+        color: #94a3b8;
+    }
+
+    .vagas-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .vaga-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        min-height: 310px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .16);
+        transition: transform .2s, box-shadow .2s;
+    }
+
+    .vaga-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 18px 38px rgba(0, 0, 0, .22);
+    }
+
+    .vaga-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .vaga-icone {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #eff6ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .vaga-publicacao {
+        color: #64748b;
+        font-size: 12px;
+        text-align: right;
+    }
+
+    .vaga-conteudo {
+        flex: 1;
+    }
+
+    .vaga-conteudo h3 {
+        color: #0f172a;
+        font-size: 18px;
+        line-height: 1.35;
+        margin: 0 0 14px;
+    }
+
+    .vaga-empresa,
+    .vaga-localizacao {
+        color: #475569;
+        font-size: 14px;
+        margin-bottom: 9px;
+    }
+
+    .vaga-status {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 5px 9px;
+        border-radius: 7px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .vaga-acoes {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .vaga-button {
+        min-height: 42px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .2s;
+        box-sizing: border-box;
+    }
+
+    .btn-ver-vaga {
+        border: 1px solid #dbe2ea;
+        background: #f8fafc;
+        color: #334155;
+    }
+
+    .btn-ver-vaga:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .btn-candidatar {
+        border: 0;
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-candidatar:hover {
+        background: #1d4ed8;
+    }
+
+    .btn-candidatar:disabled {
+        opacity: .65;
+        cursor: wait;
+    }
+
+    .sem-vagas {
+        background: rgba(255, 255, 255, .96);
+        border-radius: 18px;
+        padding: 55px 25px;
+        text-align: center;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .16);
+    }
+
+    .sem-vagas-icon {
+        font-size: 42px;
+        margin-bottom: 12px;
+    }
+
+    .sem-vagas h2 {
+        color: #0f172a;
+        margin-bottom: 8px;
+    }
+
+    .sem-vagas p {
+        color: #64748b;
+        margin: 0;
+    }
+
+    .automacao-alert {
+        border-radius: 12px;
+        padding: 15px 18px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    .automacao-alert-warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .automacao-alert-danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .automacao-alert-success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    #mensagemCandidaturaAjax {
+        margin-bottom: 20px;
+    }
+
+    .ajax-mensagem {
+        border-radius: 12px;
+        padding: 15px 18px;
+        font-weight: 600;
+    }
+
+    .ajax-mensagem-success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .ajax-mensagem-warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .ajax-mensagem-danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    @@media (max-width: 1200px) {
+
+        .filtros-card form {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .filtro-acao {
+            grid-column: span 2;
+        }
+
+        .btn-buscar {
+            width: 100%;
+        }
+
+        .vagas-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 700px) {
+
+        .automacao-page {
+            padding: 25px 15px 45px;
+        }
+
+        .automacao-header h1 {
+            font-size: 27px;
+        }
+
+        .filtros-card form {
+            grid-template-columns: 1fr;
+        }
+
+        .filtro-acao {
+            grid-column: auto;
+        }
+
+        .vagas-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .vaga-acoes {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ==========================================================
+   MODAL DETALHES DA VAGA
+   ========================================================== */
+
+    .modal-vaga {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(15, 23, 42, .75);
+        backdrop-filter: blur(5px);
+        padding: 30px;
+        overflow-y: auto;
+    }
+
+    .modal-vaga.aberto {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-vaga-conteudo {
+        position: relative;
+        width: min(900px, 100%);
+        max-height: 90vh;
+        overflow-y: auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, .35);
+        padding: 30px;
+    }
+
+    .modal-vaga-fechar {
+        position: absolute;
+        top: 18px;
+        right: 20px;
+        width: 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 50%;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 26px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .modal-vaga-fechar:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .modal-vaga-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .modal-vaga-header h2 {
+        margin: 0 45px 15px 0;
+        color: #0f172a;
+        font-size: 26px;
+        line-height: 1.3;
+    }
+
+    #modalVagaEmpresa,
+    #modalVagaLocalizacao,
+    #modalVagaPublicacao {
+        color: #475569;
+        font-size: 14px;
+        margin-top: 7px;
+    }
+
+    .modal-vaga-separador {
+        height: 1px;
+        background: #e2e8f0;
+        margin: 25px 0;
+    }
+
+    .modal-vaga-descricao h3 {
+        color: #0f172a;
+        font-size: 19px;
+        margin-bottom: 15px;
+    }
+
+    #modalVagaDescricao {
+        color: #334155;
+        font-size: 14px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    .modal-vaga-acoes {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .modal-btn-linkedin,
+    .modal-btn-candidatar {
+        min-height: 44px;
+        padding: 0 20px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        box-sizing: border-box;
+    }
+
+    .modal-btn-linkedin {
+        border: 1px solid #dbe2ea;
+        background: #f8fafc;
+        color: #334155;
+    }
+
+    .modal-btn-linkedin:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .modal-btn-candidatar {
+        border: 0;
+        background: #2563eb;
+        color: white;
+    }
+
+    .modal-btn-candidatar:hover {
+        background: #1d4ed8;
+    }
+
+    @@media (max-width: 700px) {
+
+        .modal-vaga {
+            padding: 15px;
+        }
+
+        .modal-vaga-conteudo {
+            padding: 22px;
+            max-height: 94vh;
+        }
+
+        .modal-vaga-header h2 {
+            font-size: 22px;
+        }
+
+        .modal-vaga-acoes {
+            flex-direction: column;
+        }
+
+        .modal-btn-linkedin,
+        .modal-btn-candidatar {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const botoesDetalhes =
+            document.querySelectorAll(".btn-ver-detalhes");
+
+        const modalDetalhes =
+            document.getElementById("modalDetalhesVaga");
+
+        const fecharModal =
+            document.getElementById("fecharModalVaga");
+
+        const modalTitulo =
+            document.getElementById("modalVagaTitulo");
+
+        const modalEmpresa =
+            document.getElementById("modalVagaEmpresa");
+
+        const modalLocalizacao =
+            document.getElementById("modalVagaLocalizacao");
+
+        const modalPublicacao =
+            document.getElementById("modalVagaPublicacao");
+
+        const modalDescricao =
+            document.getElementById("modalVagaDescricao");
+
+        const modalAbrirLinkedIn =
+            document.getElementById("modalAbrirLinkedIn");
+
+        const modalCandidatar =
+            document.getElementById("modalCandidatar");
+
+        let linkVagaSelecionada = "";
+
+        botoesDetalhes.forEach(function (botao) {
+
+            botao.addEventListener("click", async function () {
+
+                const titulo =
+                    botao.dataset.titulo || "Vaga";
+
+                const empresa =
+                    botao.dataset.empresa || "Empresa não informada";
+
+                const localizacao =
+                    botao.dataset.localizacao ||
+                    "Localização não informada";
+
+                const publicacao =
+                    botao.dataset.publicacao ||
+                    "Publicação não informada";
+
+                const link =
+                    botao.dataset.link || "#";
+
+                linkVagaSelecionada = link;
+
+                // ---------------------------------------------
+                // PREENCHE OS DADOS QUE JÁ TEMOS NO CARD
+                // ---------------------------------------------
+
+                modalTitulo.textContent = titulo;
+
+                modalEmpresa.textContent =
+                    "🏢 " + empresa;
+
+                modalLocalizacao.textContent =
+                    "📍 " + localizacao;
+
+                modalPublicacao.textContent =
+                    "🕐 " + publicacao;
+
+                modalAbrirLinkedIn.href =
+                    link;
+
+                // ---------------------------------------------
+                // MOSTRA O MODAL
+                // ---------------------------------------------
+
+                modalDetalhes.classList.add("aberto");
+
+                document.body.style.overflow = "hidden";
+
+                // ---------------------------------------------
+                // MOSTRA CARREGANDO
+                // ---------------------------------------------
+
+                modalDescricao.textContent =
+                    "⏳ Carregando detalhes da vaga...";
+
+                try {
+
+                    // -----------------------------------------
+                    // CHAMA:
+                    // /Automacao/Detalhes?link=...
+                    // -----------------------------------------
+
+                    const parametros =
+                        new URLSearchParams();
+
+                    parametros.append(
+                        "link",
+                        link
+                    );
+
+                    const resposta =
+                        await fetch(
+                            "@Url.Action("Detalhes", "Automacao")?" +
+                            parametros.toString(),
+                            {
+                                method: "GET",
+                                headers: {
+                                    "X-Requested-With": "XMLHttpRequest"
+                                }
+                            }
+                        );
+
+                    if (!resposta.ok) {
+
+                        throw new Error(
+                            "Erro HTTP " + resposta.status
+                        );
+                    }
+
+                    const dadosResposta =
+                        await resposta.json();
+
+                    console.log(
+                        "DETALHES DA VAGA:",
+                        dadosResposta
+                    );
+
+                    if (!dadosResposta.sucesso) {
+
+                        modalDescricao.textContent =
+                            dadosResposta.mensagem ||
+                            "Não foi possível carregar os detalhes da vaga.";
+
+                        return;
+                    }
+
+                    const dados =
+                        dadosResposta.dados;
+
+                    // -----------------------------------------
+                    // ATUALIZA OS DADOS COM O QUE VEIO DO
+                    // LINKEDIN
+                    // -----------------------------------------
+
+                    if (dados.titulo) {
+
+                        modalTitulo.textContent =
+                            dados.titulo;
+                    }
+
+                    if (dados.empresa) {
+
+                        modalEmpresa.textContent =
+                            "🏢 " + dados.empresa;
+                    }
+
+                    if (dados.localizacao) {
+
+                        modalLocalizacao.textContent =
+                            "📍 " + dados.localizacao;
+                    }
+
+                    if (dados.link) {
+
+                        modalAbrirLinkedIn.href =
+                            dados.link;
+                    }
+
+                    // -----------------------------------------
+                    // DESCRIÇÃO
+                    // -----------------------------------------
+
+                    if (
+                        dados.descricao &&
+                        dados.descricao.trim() !== ""
+                    ) {
+
+                        modalDescricao.textContent =
+                            dados.descricao;
+                    }
+                    else {
+
+                        modalDescricao.textContent =
+                            "Descrição da vaga não disponível.";
+                    }
+
+                }
+                catch (erro) {
+
+                    console.error(
+                        "ERRO AO BUSCAR DETALHES:",
+                        erro
+                    );
+
+                    modalDescricao.textContent =
+                        "Não foi possível carregar os detalhes da vaga.";
+                }
+
+            });
+
+        });
+
+        function fecharModalDetalhes() {
+
+            modalDetalhes.classList.remove("aberto");
+
+            document.body.style.overflow = "";
+        }
+
+        fecharModal.addEventListener(
+            "click",
+            fecharModalDetalhes
+        );
+
+        modalDetalhes.addEventListener(
+            "click",
+            function (evento) {
+
+                if (evento.target === modalDetalhes) {
+                    fecharModalDetalhes();
+                }
+
+            }
+        );
+
+        document.addEventListener(
+            "keydown",
+            function (evento) {
+
+                if (
+                    evento.key === "Escape" &&
+                    modalDetalhes.classList.contains("aberto")
+                ) {
+                    fecharModalDetalhes();
+                }
+
+            }
+        );
+
+        const botoesCandidatura =
+            document.querySelectorAll(".btn-candidatar");
+
+        const areaMensagem =
+            document.getElementById("mensagemCandidaturaAjax");
+
+        function mostrarMensagem(mensagem, tipo) {
+
+            areaMensagem.innerHTML = "";
+
+            const div = document.createElement("div");
+
+            div.className =
+                "ajax-mensagem ajax-mensagem-" + tipo;
+
+            div.textContent = mensagem;
+
+            areaMensagem.appendChild(div);
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+        botoesCandidatura.forEach(function (botao) {
+
+            botao.addEventListener("click", async function () {
+
+                const link = botao.dataset.link;
+
+                if (!link) {
+                    mostrarMensagem(
+                        "Link da vaga não informado.",
+                        "danger"
+                    );
+
+                    return;
+                }
+
+                const textoOriginal =
+                    botao.textContent;
+
+                botao.disabled = true;
+                botao.textContent = "⏳ Abrindo...";
+
+                try {
+
+                    const parametros =
+                        new URLSearchParams();
+
+                    parametros.append("link", link);
+
+                    const resposta =
+                        await fetch(
+                            "@Url.Action("Candidatar", "Automacao")?" +
+                            parametros.toString(),
+                            {
+                                method: "GET",
+                                headers: {
+                                    "X-Requested-With": "XMLHttpRequest"
+                                }
+                            }
+                        );
+
+                    if (!resposta.ok) {
+
+                        throw new Error(
+                            "Erro HTTP " + resposta.status
+                        );
+                    }
+
+                    const dados =
+                        await resposta.json();
+
+                    mostrarMensagem(
+                        dados.mensagem,
+                        dados.tipo
+                    );
+
+                    if (dados.sucesso) {
+                        botao.textContent = "✓ Candidatura aberta";
+                    }
+                    else {
+                        botao.disabled = false;
+                        botao.textContent = textoOriginal;
+                    }
+
+                }
+                catch (erro) {
+
+                    console.error(erro);
+
+                    mostrarMensagem(
+                        "Não foi possível iniciar a candidatura.",
+                        "danger"
+                    );
+
+                    botao.disabled = false;
+                    botao.textContent = textoOriginal;
+                }
+
+            });
+
+        });
+
+        // ======================================================
+        // CANDIDATAR-SE PELO MODAL
+        // ======================================================
+
+        if (modalCandidatar) {
+
+            modalCandidatar.addEventListener(
+                "click",
+                function () {
+
+                    if (!linkVagaSelecionada) {
+
+                        mostrarMensagem(
+                            "Nenhuma vaga selecionada.",
+                            "danger"
+                        );
+
+                        return;
+                    }
+
+                    let botaoCandidatarVaga = null;
+
+                    const botoes =
+                        document.querySelectorAll(".btn-candidatar");
+
+                    botoes.forEach(function (botao) {
+
+                        if (
+                            botao.dataset.link ===
+                            linkVagaSelecionada
+                        ) {
+                            botaoCandidatarVaga = botao;
+                        }
+
+                    });
+
+                    if (!botaoCandidatarVaga) {
+
+                        mostrarMensagem(
+                            "Não foi possível localizar o botão de candidatura desta vaga.",
+                            "danger"
+                        );
+
+                        return;
+                    }
+
+                    // Fecha o modal
+                    fecharModalDetalhes();
+
+                    // Reutiliza exatamente o fluxo
+                    // de candidatura que já existe
+                    botaoCandidatarVaga.click();
+                }
+            );
+
+        }
+
+        const formBusca =
+            document.getElementById("formBusca");
+
+        const btnBuscar =
+            document.getElementById("btnBuscar");
+
+        if (formBusca && btnBuscar) {
+
+            formBusca.addEventListener("submit", function () {
+
+                btnBuscar.disabled = true;
+
+                btnBuscar.textContent =
+                    "⏳ Buscando vagas...";
+
+            });
+
+        }
+
+    });
+
+</script>

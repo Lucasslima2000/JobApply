@@ -95,6 +95,8 @@ namespace JobApply.Controllers
             {
                 Nome = nome,
                 Email = email,
+                Telefone = model.Telefone?.Trim(),
+                Pais = model.Pais?.Trim().ToLowerInvariant(),
                 Ativo = model.Ativo,
                 DataCadastro = DateTime.UtcNow
             };
@@ -137,13 +139,15 @@ namespace JobApply.Controllers
             }
 
             var model =
-                new UsuarioFormViewModel
-                {
-                    Id = usuario.Id,
-                    Nome = usuario.Nome,
-                    Email = usuario.Email,
-                    Ativo = usuario.Ativo
-                };
+                        new UsuarioFormViewModel
+                        {
+                            Id = usuario.Id,
+                            Nome = usuario.Nome,
+                            Email = usuario.Email,
+                            Telefone = usuario.Telefone,
+                            Pais = usuario.Pais,
+                            Ativo = usuario.Ativo
+                        };
 
             return View(model);
         }
@@ -205,6 +209,10 @@ namespace JobApply.Controllers
 
             usuario.Nome = nome;
             usuario.Email = email;
+            usuario.Telefone =
+                model.Telefone?.Trim();
+            usuario.Pais =
+                model.Pais?.Trim().ToLowerInvariant();
             usuario.Ativo = model.Ativo;
 
             // Só altera a senha se uma nova senha foi informada.
@@ -324,6 +332,10 @@ namespace JobApply.Controllers
 
             public string Senha { get; set; } =
                 string.Empty;
+
+            public string? Telefone { get; set; }
+
+            public string? Pais { get; set; }
 
             public bool Ativo { get; set; } = true;
         }

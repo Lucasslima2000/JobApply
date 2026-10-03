@@ -48,9 +48,14 @@ namespace JobApply.Services
         // CANDIDATURA
         // ============================================================
 
-        public async Task<string> CandidatarAsync(string linkVaga)
+        public async Task<string> CandidatarAsync(string linkVaga, Usuario usuario)
         {
             var page = await ObterPaginaAsync();
+
+            Console.WriteLine("==========================================");
+            Console.WriteLine("INICIANDO CANDIDATURA");
+            Console.WriteLine($"LINK: {linkVaga}");
+            Console.WriteLine("==========================================");
 
             Console.WriteLine($"Abrindo vaga: {linkVaga}");
 
@@ -67,15 +72,23 @@ namespace JobApply.Services
                         WaitUntil = WaitUntilState.DOMContentLoaded,
                         Timeout = 30000
                     });
-                Console.WriteLine("========== 2 - TERMINOU GotoAsync ==========");
+
+                Console.WriteLine(
+                    "========== 2 - TERMINOU GotoAsync =========="
+                );
             }
             catch (TimeoutException)
             {
                 Console.WriteLine(
                     "O LinkedIn demorou para carregar completamente."
                 );
+
+                Console.WriteLine(
+                    "Continuando mesmo assim..."
+                );
             }
 
+            // Dar tempo para o conteúdo dinâmico do LinkedIn carregar
             await page.WaitForTimeoutAsync(3000);
 
             Console.WriteLine(
@@ -86,68 +99,460 @@ namespace JobApply.Services
             // VERIFICAR LOGIN DO LINKEDIN
             // ============================================================
 
-            if (await PrecisaLoginLinkedInAsync(page))
+            Console.WriteLine(
+                "========== VERIFICANDO LOGIN LINKEDIN =========="
+            );
+
+            bool precisaLogin =
+                await PrecisaLoginLinkedInAsync(page);
+
+            if (precisaLogin)
             {
                 Console.WriteLine(
+                    "================================================"
+                );
+
+                Console.WriteLine(
                     "LOGIN NECESSÁRIO NO LINKEDIN."
+                );
+
+                Console.WriteLine(
+                    "O usuário precisa fazer login antes de continuar."
+                );
+
+                Console.WriteLine(
+                    "================================================"
                 );
 
                 return "LOGIN_LINKEDIN";
             }
 
             // ============================================================
-            // LOCALIZAR "CANDIDATE-SE"
+            // AGUARDAR CARREGAMENTO DO BOTÃO DE CANDIDATURA
             // ============================================================
 
-            var botaoCandidatar =
-                page.GetByText(
-                    "Candidate-se",
-                    new PageGetByTextOptions
-                    {
-                        Exact = true
-                    });
-
-            var quantidade =
-                await botaoCandidatar.CountAsync();
-
             Console.WriteLine(
-                $"Elementos 'Candidate-se' encontrados: {quantidade}"
+                "Aguardando carregamento do botão de candidatura..."
             );
 
-            // Tentar também "Candidatar-se"
-            if (quantidade == 0)
-            {
-                botaoCandidatar =
-                    page.GetByText(
-                        "Candidatar-se",
-                        new PageGetByTextOptions
-                        {
-                            Exact = true
-                        });
+            await page.WaitForTimeoutAsync(2000);
 
-                quantidade =
-                    await botaoCandidatar.CountAsync();
+            // ============================================================
+            // LOCALIZAR BOTÃO DE CANDIDATURA
+            // ============================================================
+
+            ILocator? botaoCandidatar = null;
+
+            string seletorEncontrado = "";
+
+            // ------------------------------------------------------------
+            // TENTATIVA 1
+            // Botões com texto Candidate-se / Candidatar-se
+            // ------------------------------------------------------------
+
+            try
+            {
+                var botoesTexto =
+                    page.Locator(
+                        "button:has-text('Candidate-se'), " +
+                        "button:has-text('Candidatar-se'), " +
+                        "a:has-text('Candidate-se'), " +
+                        "a:has-text('Candidatar-se')"
+                    );
+
+                var quantidadeBotoesTexto =
+                    await botoesTexto.CountAsync();
 
                 Console.WriteLine(
-                    $"Elementos 'Candidatar-se' encontrados: {quantidade}"
+                    $"Botões/links por texto encontrados: {quantidadeBotoesTexto}"
+                );
+
+                for (int i = 0; i < quantidadeBotoesTexto; i++)
+                {
+                    try
+                    {
+                        var candidato =
+                            botoesTexto.Nth(i);
+
+                        if (await candidato.IsVisibleAsync())
+                        {
+                            botaoCandidatar = candidato;
+                            seletorEncontrado =
+                                "button/a com texto Candidate-se ou Candidatar-se";
+
+                            Console.WriteLine(
+                                $"Botão de candidatura encontrado no índice {i}."
+                            );
+
+                            break;
+                        }
+                    }
+                    catch
+                    {
+                        // Continua procurando.
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    $"Erro na busca por texto: {ex.Message}"
                 );
             }
 
-            if (quantidade == 0)
+            // ------------------------------------------------------------
+            // TENTATIVA 2
+            // aria-label
+            // ------------------------------------------------------------
+
+            if (botaoCandidatar == null)
+            {
+                try
+                {
+                    var botoesAria =
+                        page.Locator(
+                            "[aria-label*='Candidate-se'], " +
+                            "[aria-label*='Candidatar-se'], " +
+                            "[aria-label*='candidatura'], " +
+                            "[aria-label*='candidatar']"
+                        );
+
+                    var quantidadeAria =
+                        await botoesAria.CountAsync();
+
+                    Console.WriteLine(
+                        $"Elementos por aria-label encontrados: {quantidadeAria}"
+                    );
+
+                    for (int i = 0; i < quantidadeAria; i++)
+                    {
+                        try
+                        {
+                            var candidato =
+                                botoesAria.Nth(i);
+
+                            if (await candidato.IsVisibleAsync())
+                            {
+                                botaoCandidatar = candidato;
+                                seletorEncontrado =
+                                    "aria-label de candidatura";
+
+                                Console.WriteLine(
+                                    $"Botão encontrado pelo aria-label no índice {i}."
+                                );
+
+                                break;
+                            }
+                        }
+                        catch
+                        {
+                            // Continua procurando.
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"Erro na busca por aria-label: {ex.Message}"
+                    );
+                }
+            }
+
+            // ------------------------------------------------------------
+            // TENTATIVA 3
+            // data-test / classes conhecidas do LinkedIn
+            // ------------------------------------------------------------
+
+            if (botaoCandidatar == null)
+            {
+                try
+                {
+                    var botoesLinkedIn =
+                        page.Locator(
+                            "button[data-test-id*='apply'], " +
+                            "button[data-control-name*='apply'], " +
+                            "button[class*='apply'], " +
+                            "a[data-test-id*='apply'], " +
+                            "a[data-control-name*='apply']"
+                        );
+
+                    var quantidadeLinkedIn =
+                        await botoesLinkedIn.CountAsync();
+
+                    Console.WriteLine(
+                        $"Elementos pelos seletores de candidatura encontrados: {quantidadeLinkedIn}"
+                    );
+
+                    for (int i = 0; i < quantidadeLinkedIn; i++)
+                    {
+                        try
+                        {
+                            var candidato =
+                                botoesLinkedIn.Nth(i);
+
+                            if (await candidato.IsVisibleAsync())
+                            {
+                                botaoCandidatar = candidato;
+                                seletorEncontrado =
+                                    "seletor de candidatura do LinkedIn";
+
+                                Console.WriteLine(
+                                    $"Botão encontrado pelo seletor LinkedIn no índice {i}."
+                                );
+
+                                break;
+                            }
+                        }
+                        catch
+                        {
+                            // Continua procurando.
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"Erro nos seletores LinkedIn: {ex.Message}"
+                    );
+                }
+            }
+
+            // ------------------------------------------------------------
+            // TENTATIVA 4
+            // GetByText sem Exact
+            // ------------------------------------------------------------
+
+            if (botaoCandidatar == null)
+            {
+                try
+                {
+                    var textos =
+                        new[]
+                        {
+                    "Candidatar-se",
+                    "Candidate-se"
+                        };
+
+                    foreach (var texto in textos)
+                    {
+                        try
+                        {
+                            var elemento =
+                                page.GetByText(
+                                    texto,
+                                    new PageGetByTextOptions
+                                    {
+                                        Exact = false
+                                    });
+
+                            var quantidade =
+                                await elemento.CountAsync();
+
+                            Console.WriteLine(
+                                $"Texto '{texto}' encontrado: {quantidade}"
+                            );
+
+                            for (int i = 0; i < quantidade; i++)
+                            {
+                                try
+                                {
+                                    var candidato =
+                                        elemento.Nth(i);
+
+                                    if (!await candidato.IsVisibleAsync())
+                                        continue;
+
+                                    // Primeiro tenta descobrir se o texto
+                                    // está dentro de um botão.
+                                    var botaoPai =
+                                        candidato.Locator(
+                                            "xpath=ancestor::button[1]"
+                                        );
+
+                                    if (await botaoPai.CountAsync() > 0 &&
+                                        await botaoPai.First.IsVisibleAsync())
+                                    {
+                                        botaoCandidatar =
+                                            botaoPai.First;
+
+                                        seletorEncontrado =
+                                            $"texto '{texto}' dentro de botão";
+
+                                        Console.WriteLine(
+                                            $"Botão encontrado através do texto '{texto}' dentro de um botão."
+                                        );
+
+                                        break;
+                                    }
+
+                                    // Caso seja um link.
+                                    var linkPai =
+                                        candidato.Locator(
+                                            "xpath=ancestor::a[1]"
+                                        );
+
+                                    if (await linkPai.CountAsync() > 0 &&
+                                        await linkPai.First.IsVisibleAsync())
+                                    {
+                                        botaoCandidatar =
+                                            linkPai.First;
+
+                                        seletorEncontrado =
+                                            $"texto '{texto}' dentro de link";
+
+                                        Console.WriteLine(
+                                            $"Link de candidatura encontrado através do texto '{texto}'."
+                                        );
+
+                                        break;
+                                    }
+
+                                    // Último recurso: usar o próprio elemento.
+                                    botaoCandidatar =
+                                        candidato;
+
+                                    seletorEncontrado =
+                                        $"texto '{texto}'";
+
+                                    Console.WriteLine(
+                                        $"Elemento de candidatura encontrado através do texto '{texto}'."
+                                    );
+
+                                    break;
+                                }
+                                catch
+                                {
+                                    // Continua procurando.
+                                }
+                            }
+
+                            if (botaoCandidatar != null)
+                                break;
+                        }
+                        catch
+                        {
+                            // Continua para o próximo texto.
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"Erro na busca textual de candidatura: {ex.Message}"
+                    );
+                }
+            }
+
+            // ============================================================
+            // SE NÃO ENCONTROU, ESPERAR E TENTAR NOVAMENTE
+            // ============================================================
+
+            if (botaoCandidatar == null)
             {
                 Console.WriteLine(
-                    "Botão 'Candidate-se' não encontrado."
+                    "Botão ainda não encontrado."
+                );
+
+                Console.WriteLine(
+                    "Aguardando mais alguns segundos para o LinkedIn renderizar a página..."
+                );
+
+                await page.WaitForTimeoutAsync(5000);
+
+                try
+                {
+                    var botoes =
+                        page.Locator(
+                            "button:has-text('Candidate-se'), " +
+                            "button:has-text('Candidatar-se'), " +
+                            "a:has-text('Candidate-se'), " +
+                            "a:has-text('Candidatar-se')"
+                        );
+
+                    var quantidade =
+                        await botoes.CountAsync();
+
+                    Console.WriteLine(
+                        $"Nova tentativa encontrou: {quantidade} elementos."
+                    );
+
+                    for (int i = 0; i < quantidade; i++)
+                    {
+                        try
+                        {
+                            var candidato =
+                                botoes.Nth(i);
+
+                            if (await candidato.IsVisibleAsync())
+                            {
+                                botaoCandidatar = candidato;
+                                seletorEncontrado =
+                                    "nova tentativa por texto";
+
+                                Console.WriteLine(
+                                    $"Botão encontrado na nova tentativa. Índice: {i}"
+                                );
+
+                                break;
+                            }
+                        }
+                        catch
+                        {
+                            // Continua.
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"Erro na segunda tentativa: {ex.Message}"
+                    );
+                }
+            }
+
+            // ============================================================
+            // NÃO ENCONTROU O BOTÃO
+            // ============================================================
+
+            if (botaoCandidatar == null)
+            {
+                Console.WriteLine(
+                    "================================================"
+                );
+
+                Console.WriteLine(
+                    "BOTÃO DE CANDIDATURA NÃO ENCONTRADO."
+                );
+
+                Console.WriteLine(
+                    $"URL ATUAL: {page.Url}"
+                );
+
+                Console.WriteLine(
+                    "================================================"
                 );
 
                 return "CANDIDATURA_NAO_ENCONTRADA";
             }
 
             Console.WriteLine(
-                "Botão 'Candidate-se' encontrado."
+                "================================================"
+            );
+
+            Console.WriteLine(
+                "BOTÃO DE CANDIDATURA ENCONTRADO."
+            );
+
+            Console.WriteLine(
+                $"Método: {seletorEncontrado}"
+            );
+
+            Console.WriteLine(
+                "================================================"
             );
 
             // ============================================================
-            // CLICAR NO "CANDIDATE-SE"
+            // CLICAR NO BOTÃO
             // ============================================================
 
             IPage? paginaExterna = null;
@@ -155,12 +560,18 @@ namespace JobApply.Services
             try
             {
                 await botaoCandidatar
-                    .First
                     .ScrollIntoViewIfNeededAsync();
 
+                await page.WaitForTimeoutAsync(500);
+
                 Console.WriteLine(
-                    "Clicando no botão 'Candidate-se'..."
+                    "Clicando no botão de candidatura..."
                 );
+
+                // IMPORTANTE:
+                // O clique acontece UMA ÚNICA VEZ.
+                // Se abrir popup, capturamos a nova página.
+                // Se não abrir popup, continuamos usando a página atual.
 
                 try
                 {
@@ -169,8 +580,11 @@ namespace JobApply.Services
                             async () =>
                             {
                                 await botaoCandidatar
-                                    .First
-                                    .ClickAsync();
+                                    .ClickAsync(
+                                        new LocatorClickOptions
+                                        {
+                                            Timeout = 10000
+                                        });
                             },
                             new PageRunAndWaitForPopupOptions
                             {
@@ -178,30 +592,36 @@ namespace JobApply.Services
                             });
 
                     Console.WriteLine(
-                        "Uma nova página/janela foi aberta pelo LinkedIn."
+                        "Nova página/janela detectada após o clique."
                     );
                 }
                 catch (TimeoutException)
                 {
                     Console.WriteLine(
-                        "Nenhuma nova janela detectada. Verificando a página atual."
+                        "Nenhuma nova janela foi detectada."
                     );
 
-                    // O clique pode ter acontecido mesmo sem popup.
+                    Console.WriteLine(
+                        "O clique pode ter aberto a candidatura na página atual."
+                    );
                 }
 
                 Console.WriteLine(
-                    "Botão 'Candidate-se' clicado automaticamente."
+                    "Botão de candidatura clicado."
                 );
             }
             catch (Exception ex)
             {
                 Console.WriteLine(
-                    $"Erro ao clicar no botão 'Candidate-se': {ex.Message}"
+                    $"Erro ao clicar no botão de candidatura: {ex.Message}"
                 );
 
                 return "ERRO_AO_ABRIR_CANDIDATURA";
             }
+
+            // ============================================================
+            // AGUARDAR A RESPOSTA DO LINKEDIN
+            // ============================================================
 
             await page.WaitForTimeoutAsync(5000);
 
@@ -211,7 +631,14 @@ namespace JobApply.Services
 
             if (paginaExterna != null)
             {
-                await paginaExterna.WaitForTimeoutAsync(5000);
+                try
+                {
+                    await paginaExterna.WaitForTimeoutAsync(5000);
+                }
+                catch
+                {
+                    // Continua mesmo se a página tiver algum atraso.
+                }
 
                 Console.WriteLine(
                     $"Nova página de candidatura: {paginaExterna.Url}"
@@ -231,7 +658,6 @@ namespace JobApply.Services
                             "Site Gupy detectado."
                         );
 
-                        // Verificar se precisa de login antes de continuar
                         if (await PrecisaLoginSiteExternoAsync(paginaExterna))
                         {
                             Console.WriteLine(
@@ -243,7 +669,8 @@ namespace JobApply.Services
                             );
 
                             var loginConcluido =
-                                await AguardarLoginSiteExternoAsync(paginaExterna);
+                                await AguardarLoginSiteExternoAsync(
+                                    paginaExterna);
 
                             if (!loginConcluido)
                             {
@@ -256,10 +683,6 @@ namespace JobApply.Services
 
                             Console.WriteLine(
                                 "Login da Gupy concluído."
-                            );
-
-                            Console.WriteLine(
-                                $"Continuando na página: {paginaExterna.Url}"
                             );
                         }
 
@@ -299,8 +722,8 @@ namespace JobApply.Services
                                 $"Página após clicar na Gupy: {paginaExterna.Url}"
                             );
 
-                            // Verificar se o clique levou para login
-                            if (await PrecisaLoginSiteExternoAsync(paginaExterna))
+                            if (await PrecisaLoginSiteExternoAsync(
+                                    paginaExterna))
                             {
                                 Console.WriteLine(
                                     "LOGIN NECESSÁRIO APÓS CLICAR EM CANDIDATAR-SE NA GUPY."
@@ -331,7 +754,8 @@ namespace JobApply.Services
                             "O LinkedIn abriu diretamente um site externo."
                         );
 
-                        if (await PrecisaLoginSiteExternoAsync(paginaExterna))
+                        if (await PrecisaLoginSiteExternoAsync(
+                                paginaExterna))
                         {
                             Console.WriteLine(
                                 "LOGIN NECESSÁRIO NO SITE DA EMPRESA."
@@ -354,7 +778,7 @@ namespace JobApply.Services
             // ============================================================
 
             Console.WriteLine(
-                $"Página após clicar no Candidate-se: {page.Url}"
+                $"Página após clicar no botão: {page.Url}"
             );
 
             // ============================================================
@@ -549,7 +973,7 @@ namespace JobApply.Services
                 }
 
                 // ========================================================
-                // GUPY ABERTA ATRAVÉS DO LINK DO LINKEDIN
+                // GUPY
                 // ========================================================
 
                 if (novaPagina.Url.Contains(
@@ -605,7 +1029,8 @@ namespace JobApply.Services
                             $"Página após clicar na Gupy: {novaPagina.Url}"
                         );
 
-                        if (await PrecisaLoginSiteExternoAsync(novaPagina))
+                        if (await PrecisaLoginSiteExternoAsync(
+                                novaPagina))
                         {
                             Console.WriteLine(
                                 "LOGIN NECESSÁRIO APÓS CLICAR EM CANDIDATAR-SE NA GUPY."
@@ -652,33 +1077,1893 @@ namespace JobApply.Services
                 "Nenhuma candidatura externa encontrada."
             );
 
-            var modalCandidatura =
-                page.Locator(
-                    "[data-test-modal], " +
-                    ".jobs-easy-apply-modal, " +
-                    ".jobs-easy-apply-content"
-                );
+            Console.WriteLine(
+                "Verificando se a candidatura simplificada do LinkedIn foi aberta..."
+            );
 
-            if (await modalCandidatura.CountAsync() > 0)
+            // ============================================================
+            // AGUARDAR ABERTURA DO EASY APPLY
+            // ============================================================
+
+            await page.WaitForTimeoutAsync(2000);
+
+            bool candidaturaSimplificadaEncontrada = false;
+
+            // ============================================================
+            // VERIFICAR MODAIS
+            // ============================================================
+
+            var seletoresModal =
+                new[]
+                {
+            ".jobs-easy-apply-modal",
+            ".jobs-easy-apply-content",
+            "[data-test-modal]",
+            "[role='dialog']",
+            ".artdeco-modal",
+            ".artdeco-modal-overlay"
+                };
+
+            foreach (var seletor in seletoresModal)
             {
-                Console.WriteLine(
-                    "Formulário de candidatura do LinkedIn aberto."
-                );
+                try
+                {
+                    var elemento =
+                        page.Locator(seletor);
 
-                return "CANDIDATURA_LINKEDIN_ABERTA";
+                    var quantidade =
+                        await elemento.CountAsync();
+
+                    Console.WriteLine(
+                        $"Seletor '{seletor}': {quantidade}"
+                    );
+
+                    if (quantidade > 0)
+                    {
+                        for (int i = 0; i < quantidade; i++)
+                        {
+                            try
+                            {
+                                if (await elemento.Nth(i).IsVisibleAsync())
+                                {
+                                    Console.WriteLine(
+                                        $"Modal visível encontrado: {seletor}"
+                                    );
+
+                                    candidaturaSimplificadaEncontrada =
+                                        true;
+
+                                    break;
+                                }
+                            }
+                            catch
+                            {
+                                // Continua.
+                            }
+                        }
+                    }
+
+                    if (candidaturaSimplificadaEncontrada)
+                        break;
+                }
+                catch
+                {
+                    // Continua.
+                }
             }
 
+            // ============================================================
+            // VERIFICAR TEXTOS DA CANDIDATURA SIMPLIFICADA
+            // ============================================================
+
+            if (!candidaturaSimplificadaEncontrada)
+            {
+                try
+                {
+                    var textosCandidatura =
+                        new[]
+                        {
+                    "Candidatura simplificada",
+                    "Candidatura Simplificada",
+                    "Easy Apply",
+                    "Enviar candidatura",
+                    "Próximo",
+                    "Revisar",
+                    "Informações de contato",
+                    "Experiência profissional",
+                    "Currículo"
+                        };
+
+                    foreach (var texto in textosCandidatura)
+                    {
+                        try
+                        {
+                            var elementoTexto =
+                                page.GetByText(
+                                    texto,
+                                    new PageGetByTextOptions
+                                    {
+                                        Exact = false
+                                    });
+
+                            var quantidade =
+                                await elementoTexto.CountAsync();
+
+                            Console.WriteLine(
+                                $"Texto '{texto}' encontrado: {quantidade}"
+                            );
+
+                            for (int i = 0; i < quantidade; i++)
+                            {
+                                try
+                                {
+                                    if (await elementoTexto.Nth(i).IsVisibleAsync())
+                                    {
+                                        Console.WriteLine(
+                                            $"Candidatura simplificada identificada pelo texto: {texto}"
+                                        );
+
+                                        candidaturaSimplificadaEncontrada =
+                                            true;
+
+                                        break;
+                                    }
+                                }
+                                catch
+                                {
+                                    // Continua.
+                                }
+                            }
+
+                            if (candidaturaSimplificadaEncontrada)
+                                break;
+                        }
+                        catch
+                        {
+                            // Continua.
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"Erro ao verificar textos da candidatura: {ex.Message}"
+                    );
+                }
+            }
+
+            // ============================================================
+            // VERIFICAR BOTÕES CARACTERÍSTICOS DO EASY APPLY
+            // ============================================================
+
+            if (!candidaturaSimplificadaEncontrada)
+            {
+                try
+                {
+                    var botoesEasyApply =
+                        page.Locator(
+                            "button:has-text('Próximo'), " +
+                            "button:has-text('Revisar'), " +
+                            "button:has-text('Enviar candidatura'), " +
+                            "button:has-text('Avançar')"
+                        );
+
+                    var quantidade =
+                        await botoesEasyApply.CountAsync();
+
+                    Console.WriteLine(
+                        $"Botões característicos do Easy Apply encontrados: {quantidade}"
+                    );
+
+                    for (int i = 0; i < quantidade; i++)
+                    {
+                        try
+                        {
+                            if (await botoesEasyApply.Nth(i).IsVisibleAsync())
+                            {
+                                candidaturaSimplificadaEncontrada =
+                                    true;
+
+                                Console.WriteLine(
+                                    "Candidatura simplificada identificada através de botão do formulário."
+                                );
+
+                                break;
+                            }
+                        }
+                        catch
+                        {
+                            // Continua.
+                        }
+                    }
+                }
+                catch
+                {
+                    // Continua.
+                }
+            }
+
+            // ============================================================
+            // VERIFICAR RESULTADO
+            // ============================================================
+
+            if (candidaturaSimplificadaEncontrada)
+            {
+                Console.WriteLine(
+                    "=========================================="
+                );
+
+                Console.WriteLine(
+                    "CANDIDATURA SIMPLIFICADA DO LINKEDIN ABERTA!"
+                );
+
+                Console.WriteLine(
+                    "=========================================="
+                );
+
+                // ========================================================
+                // ETAPA 1 - PREENCHER INFORMAÇÕES DE CONTATO
+                // ========================================================
+
+                try
+                {
+                    Console.WriteLine(
+                        "Preparando primeira etapa da candidatura..."
+                    );
+
+                    await page.WaitForTimeoutAsync(1500);
+
+                    // ----------------------------------------------------
+                    // GARANTIR PAÍS
+                    // ----------------------------------------------------
+                    try
+                    {
+                        var selects = page.Locator("select");
+
+                        var quantidadeSelects =
+                            await selects.CountAsync();
+
+                        Console.WriteLine(
+                            $"Selects encontrados: {quantidadeSelects}"
+                        );
+
+                        var paisUsuario =
+                            usuario.Pais?
+                                .Trim()
+                                .ToLowerInvariant();
+
+                        if (string.IsNullOrWhiteSpace(paisUsuario))
+                        {
+                            Console.WriteLine(
+                                "País do usuário não informado."
+                            );
+                        }
+                        else
+                        {
+                            Console.WriteLine(
+                                $"País do usuário: {paisUsuario}"
+                            );
+
+                            for (int i = 0; i < quantidadeSelects; i++)
+                            {
+                                try
+                                {
+                                    var select =
+                                        selects.Nth(i);
+
+                                    if (!await select.IsVisibleAsync())
+                                        continue;
+
+                                    var possuiPais =
+                                        await select.Locator(
+                                            $"option[value='{paisUsuario}']"
+                                        ).CountAsync();
+
+                                    if (possuiPais > 0)
+                                    {
+                                        await select.SelectOptionAsync(
+                                            paisUsuario
+                                        );
+
+                                        Console.WriteLine(
+                                            $"País definido como: {paisUsuario}"
+                                        );
+
+                                        break;
+                                    }
+                                }
+                                catch
+                                {
+                                    // Continua procurando o select do país.
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(
+                            $"Não foi possível definir o país: {ex.Message}"
+                        );
+                    }
+
+                    // ----------------------------------------------------    
+                    // PREENCHER TELEFONE
+                    // ----------------------------------------------------
+                    try
+                    {
+                        var telefone =
+                            page.Locator(
+                                "input[type='tel']"
+                            );
+
+                        var quantidadeTelefone =
+                            await telefone.CountAsync();
+
+                        Console.WriteLine(
+                            $"Campos de telefone encontrados: {quantidadeTelefone}"
+                        );
+
+                        if (quantidadeTelefone > 0)
+                        {
+                            var campoTelefone =
+                                telefone.First;
+
+                            if (await campoTelefone.IsVisibleAsync())
+                            {
+                                await campoTelefone
+                                    .FillAsync(usuario.Telefone!);
+
+                                Console.WriteLine(
+                                    $"Telefone preenchido com os dados do usuário: {usuario.Telefone}"
+                                );
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(
+                            $"Erro ao preencher telefone: {ex.Message}"
+                        );
+                    }
+
+                    // ----------------------------------------------------
+                    // E-MAIL
+                    // ----------------------------------------------------
+
+                    try
+                    {
+                        var camposEmail =
+                            page.Locator("input[type='email']");
+
+                        var quantidadeEmail =
+                            await camposEmail.CountAsync();
+
+                        Console.WriteLine(
+                            $"Campos de e-mail encontrados: {quantidadeEmail}"
+                        );
+
+                        if (quantidadeEmail > 0)
+                        {
+                            var campoEmail =
+                                camposEmail.First;
+
+                            if (await campoEmail.IsVisibleAsync())
+                            {
+                                await campoEmail.FillAsync(
+                                    usuario.Email!
+                                );
+
+                                Console.WriteLine(
+                                    $"E-mail preenchido com os dados do usuário: {usuario.Email}"
+                                );
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine(
+                                "Campo de e-mail não encontrado. O LinkedIn pode ter deixado o e-mail selecionado automaticamente."
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(
+                            $"Erro ao preencher e-mail: {ex.Message}"
+                        );
+                    }
+
+                    // ====================================================
+                    // INSPEÇÃO ANTES DE AVANÇAR
+                    // ====================================================
+
+                    Console.WriteLine(
+                        "Dados da primeira etapa preenchidos."
+                    );
+
+                    // ====================================================
+                    // LOCALIZAR BOTÃO AVANÇAR
+                    // ====================================================
+
+                    var botaoAvancar =
+                        page.GetByRole(
+                            AriaRole.Button,
+                            new PageGetByRoleOptions
+                            {
+                                Name = "Avançar",
+                                Exact = true
+                            });
+
+                    var quantidadeAvancar =
+                        await botaoAvancar.CountAsync();
+
+                    Console.WriteLine(
+                        $"Botões 'Avançar' encontrados: {quantidadeAvancar}"
+                    );
+
+                    if (quantidadeAvancar == 0)
+                    {
+                        Console.WriteLine(
+                            "Botão 'Avançar' não encontrado."
+                        );
+
+                        await InspecionarCandidaturaAsync(page);
+
+                        return "CANDIDATURA_LINKEDIN_ETAPA_1_NAO_AVANCOU";
+                    }
+
+                    // ----------------------------------------------------
+                    // CLICAR UMA ÚNICA VEZ
+                    // ----------------------------------------------------
+
+                    var avancar =
+                        botaoAvancar.First;
+
+                    if (!await avancar.IsVisibleAsync())
+                    {
+                        Console.WriteLine(
+                            "Botão 'Avançar' não está visível."
+                        );
+
+                        await InspecionarCandidaturaAsync(page);
+
+                        return "CANDIDATURA_LINKEDIN_ETAPA_1_NAO_AVANCOU";
+                    }
+
+                    await avancar.ScrollIntoViewIfNeededAsync();
+
+                    await page.WaitForTimeoutAsync(500);
+
+                    Console.WriteLine(
+                        "Clicando em 'Avançar'..."
+                    );
+
+                    await avancar.ClickAsync();
+
+                    Console.WriteLine(
+                        "'Avançar' clicado com sucesso."
+                    );
+
+                    // ====================================================
+                    // AGUARDAR PÁGINA 2
+                    // ====================================================
+
+                    await page.WaitForTimeoutAsync(2500);
+
+                    Console.WriteLine(
+                        "=========================================="
+                    );
+
+                    Console.WriteLine(
+                        "AVANÇOU PARA A PRÓXIMA ETAPA."
+                    );
+
+                    Console.WriteLine(
+                        $"URL ATUAL: {page.Url}"
+                    );
+
+                    Console.WriteLine(
+                        "=========================================="
+                    );
+
+                    // ====================================================
+                    // INSPECIONAR PÁGINA 2
+                    // ====================================================
+
+                    Console.WriteLine(
+                        "Iniciando inspeção da próxima etapa..."
+                    );
+
+                    await InspecionarCandidaturaAsync(page);
+
+                    // ========================================================
+                    // ETAPA 2 - SELECIONAR CURRÍCULO
+                    // ========================================================
+
+                    Console.WriteLine(
+                        "=========================================="
+                    );
+
+                    Console.WriteLine(
+                        "INICIANDO ETAPA 2 - SELEÇÃO DO CURRÍCULO"
+                    );
+
+                    Console.WriteLine(
+                        "=========================================="
+                    );
+
+                    await page.WaitForTimeoutAsync(1500);
+
+                    // ========================================================
+                    // VERIFICAR CURRÍCULO SELECIONADO
+                    // ========================================================
+
+                    bool curriculoSelecionado = false;
+
+                    try
+                    {
+                        // ----------------------------------------------------
+                        // LOCALIZAR OS RADIOS DOS CURRÍCULOS
+                        // ----------------------------------------------------
+
+                        var radiosCurriculo =
+                            page.Locator(
+                                "input[type='radio']"
+                            );
+
+                        var quantidadeRadios =
+                            await radiosCurriculo.CountAsync();
+
+                        Console.WriteLine(
+                            $"Radios encontrados na etapa de currículo: {quantidadeRadios}"
+                        );
+
+                        // ----------------------------------------------------
+                        // LOCALIZAR RADIOS QUE POSSUEM ARIA-LABEL
+                        // ----------------------------------------------------
+
+                        var radiosComCurriculo =
+                            page.Locator(
+                                "input[type='radio'][aria-label]"
+                            );
+
+                        var quantidadeCurriculos =
+                            await radiosComCurriculo.CountAsync();
+
+                        Console.WriteLine(
+                            $"Currículos encontrados: {quantidadeCurriculos}"
+                        );
+
+                        if (quantidadeCurriculos == 0)
+                        {
+                            Console.WriteLine(
+                                "Nenhum currículo foi encontrado."
+                            );
+                        }
+                        else
+                        {
+                            // ------------------------------------------------
+                            // LISTAR OS CURRÍCULOS
+                            // ------------------------------------------------
+
+                            for (int i = 0; i < quantidadeCurriculos; i++)
+                            {
+                                try
+                                {
+                                    var radio =
+                                        radiosComCurriculo.Nth(i);
+
+                                    var nome =
+                                        await radio.GetAttributeAsync(
+                                            "aria-label"
+                                        );
+
+                                    var marcado =
+                                        await radio.IsCheckedAsync();
+
+                                    Console.WriteLine(
+                                        $"[{i}] {nome} | Selecionado: {marcado}"
+                                    );
+
+                                    if (marcado)
+                                    {
+                                        curriculoSelecionado = true;
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(
+                                        $"Erro ao verificar currículo [{i}]: {ex.Message}"
+                                    );
+                                }
+                            }
+
+                            // ------------------------------------------------
+                            // CASO NENHUM RADIO INFORME CHECKED
+                            //
+                            // O LinkedIn pode estar usando um componente visual
+                            // e o radio real pode permanecer oculto.
+                            //
+                            // Nesse caso, consideramos o currículo mais recente
+                            // apresentado pelo LinkedIn como padrão.
+                            // ------------------------------------------------
+
+                            if (!curriculoSelecionado)
+                            {
+                                Console.WriteLine(
+                                    "Nenhum radio informou IsChecked=true."
+                                );
+
+                                Console.WriteLine(
+                                    "O LinkedIn pode estar controlando a seleção através do componente visual."
+                                );
+
+                                // ------------------------------------------------
+                                // CONSIDERAR O PRIMEIRO CURRÍCULO COMO PADRÃO
+                                // ------------------------------------------------
+
+                                var primeiroCurriculo =
+                                    radiosComCurriculo.First;
+
+                                var nomePrimeiroCurriculo =
+                                    await primeiroCurriculo.GetAttributeAsync(
+                                        "aria-label"
+                                    );
+
+                                Console.WriteLine(
+                                    $"Currículo padrão apresentado pelo LinkedIn: {nomePrimeiroCurriculo}"
+                                );
+
+                                // ------------------------------------------------
+                                // NÃO CLICAR NO RADIO
+                                // ------------------------------------------------
+
+                                curriculoSelecionado = true;
+
+                                Console.WriteLine(
+                                    "Currículo considerado selecionado pelo estado padrão do LinkedIn."
+                                );
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(
+                            $"Erro ao verificar currículo: {ex.Message}"
+                        );
+                    }
+
+                    // ========================================================
+                    // VERIFICAR RESULTADO DA SELEÇÃO
+                    // ========================================================
+
+                    if (!curriculoSelecionado)
+                    {
+                        Console.WriteLine(
+                            "=========================================="
+                        );
+
+                        Console.WriteLine(
+                            "NÃO FOI POSSÍVEL IDENTIFICAR UM CURRÍCULO."
+                        );
+
+                        Console.WriteLine(
+                            "A candidatura NÃO será avançada."
+                        );
+
+                        Console.WriteLine(
+                            "=========================================="
+                        );
+
+                        await InspecionarCandidaturaAsync(page);
+
+                        return "CANDIDATURA_LINKEDIN_CURRICULO_NAO_SELECIONADO";
+                    }
+
+                    Console.WriteLine(
+                        "=========================================="
+                    );
+
+                    Console.WriteLine(
+                        "CURRÍCULO PRONTO PARA A CANDIDATURA."
+                    );
+
+                    Console.WriteLine(
+                        "O LinkedIn apresentou o currículo mais recente como padrão."
+                    );
+
+                    Console.WriteLine(
+                        "=========================================="
+                    );
+
+                    // ========================================================
+                    // LOCALIZAR BOTÃO DA ETAPA 2
+                    // ========================================================
+
+                    try
+                    {
+                        // ----------------------------------------------------
+                        // PROCURAR "AVANÇAR"
+                        // ----------------------------------------------------
+
+                        var botaoAvancarEtapa2 =
+                            page.GetByRole(
+                                AriaRole.Button,
+                                new PageGetByRoleOptions
+                                {
+                                    Name = "Avançar",
+                                    Exact = true
+                                });
+
+                        var quantidadeAvancarEtapa2 =
+                            await botaoAvancarEtapa2.CountAsync();
+
+                        Console.WriteLine(
+                            $"Botões 'Avançar' encontrados: {quantidadeAvancarEtapa2}"
+                        );
+
+                        // ====================================================
+                        // SE ENCONTRAR "AVANÇAR"
+                        //
+                        // NÃO CLICAR.
+                        //
+                        // A próxima etapa pode conter perguntas específicas
+                        // da vaga que ainda não conhecemos.
+                        // ====================================================
+
+                        if (quantidadeAvancarEtapa2 > 0)
+                        {
+                            var avancarEtapa2 =
+                                botaoAvancarEtapa2.First;
+
+                            if (await avancarEtapa2.IsVisibleAsync())
+                            {
+                                Console.WriteLine(
+                                    "=========================================="
+                                );
+
+                                Console.WriteLine(
+                                    "BOTÃO 'AVANÇAR' ENCONTRADO."
+                                );
+
+                                Console.WriteLine(
+                                    "A próxima etapa pode conter perguntas específicas da vaga."
+                                );
+
+                                Console.WriteLine(
+                                    "A AUTOMAÇÃO NÃO VAI CLICAR AUTOMATICAMENTE."
+                                );
+
+                                Console.WriteLine(
+                                    "CONTROLE DEVOLVIDO AO USUÁRIO."
+                                );
+
+                                Console.WriteLine(
+                                    "=========================================="
+                                );
+
+                                // ------------------------------------------------
+                                // INSPECIONAR O ESTADO ATUAL
+                                // ------------------------------------------------
+
+                                await InspecionarCandidaturaAsync(page);
+
+                                return "CANDIDATURA_LINKEDIN_CONTROLE_USUARIO";
+                            }
+
+                            Console.WriteLine(
+                                "Botão 'Avançar' encontrado, mas não está visível."
+                            );
+                        }
+
+                        // ====================================================
+                        // PROCURAR "AVALIAR"
+                        // ====================================================
+
+                        var botaoAvaliarEtapa2 =
+                            page.GetByRole(
+                                AriaRole.Button,
+                                new PageGetByRoleOptions
+                                {
+                                    Name = "Avaliar",
+                                    Exact = true
+                                });
+
+                        var quantidadeAvaliarEtapa2 =
+                            await botaoAvaliarEtapa2.CountAsync();
+
+                        Console.WriteLine(
+                            $"Botões 'Avaliar' encontrados: {quantidadeAvaliarEtapa2}"
+                        );
+
+                        // ====================================================
+                        // SE ENCONTRAR "AVALIAR"
+                        //
+                        // CLICAR AUTOMATICAMENTE.
+                        // ====================================================
+
+                        if (quantidadeAvaliarEtapa2 > 0)
+                        {
+                            var avaliarEtapa2 =
+                                botaoAvaliarEtapa2.First;
+
+                            if (await avaliarEtapa2.IsVisibleAsync())
+                            {
+                                Console.WriteLine(
+                                    "=========================================="
+                                );
+
+                                Console.WriteLine(
+                                    "BOTÃO 'AVALIAR' ENCONTRADO."
+                                );
+
+                                Console.WriteLine(
+                                    "O botão está disponível na etapa 2."
+                                );
+
+                                Console.WriteLine(
+                                    "CLICANDO AUTOMATICAMENTE EM 'AVALIAR'..."
+                                );
+
+                                Console.WriteLine(
+                                    "=========================================="
+                                );
+
+                                // ------------------------------------------------
+                                // GARANTIR QUE O BOTÃO ESTÁ NA ÁREA VISÍVEL
+                                // ------------------------------------------------
+
+                                await avaliarEtapa2.ScrollIntoViewIfNeededAsync();
+
+                                await page.WaitForTimeoutAsync(500);
+
+                                // ------------------------------------------------
+                                // CLICAR
+                                // ------------------------------------------------
+
+                                await avaliarEtapa2.ClickAsync();
+
+                                Console.WriteLine(
+                                    "'Avaliar' clicado com sucesso."
+                                );
+
+                                // ------------------------------------------------
+                                // AGUARDAR O LINKEDIN PROCESSAR A PRÓXIMA ETAPA
+                                // ------------------------------------------------
+
+                                await page.WaitForTimeoutAsync(2500);
+
+                                Console.WriteLine(
+                                    "=========================================="
+                                );
+
+                                Console.WriteLine(
+                                    "AVANÇOU PARA A PRÓXIMA ETAPA."
+                                );
+
+                                Console.WriteLine(
+                                    $"URL ATUAL: {page.Url}"
+                                );
+
+                                Console.WriteLine(
+                                    "=========================================="
+                                );
+
+                                // ------------------------------------------------
+                                // INSPECIONAR A NOVA ETAPA
+                                // ------------------------------------------------
+
+                                await InspecionarCandidaturaAsync(page);
+
+                                return "CANDIDATURA_LINKEDIN_ETAPA_SEGUINTE";
+                            }
+
+                            Console.WriteLine(
+                                "Botão 'Avaliar' encontrado, mas não está visível."
+                            );
+
+                            await InspecionarCandidaturaAsync(page);
+
+                            return "CANDIDATURA_LINKEDIN_AVALIAR_NAO_VISIVEL";
+                        }
+
+                        // ====================================================
+                        // NENHUM BOTÃO CONHECIDO FOI ENCONTRADO
+                        // ====================================================
+
+                        Console.WriteLine(
+                            "=========================================="
+                        );
+
+                        Console.WriteLine(
+                            "NENHUM BOTÃO CONHECIDO FOI ENCONTRADO NA ETAPA 2."
+                        );
+
+                        Console.WriteLine(
+                            "Botões esperados: 'Avançar' ou 'Avaliar'."
+                        );
+
+                        Console.WriteLine(
+                            "=========================================="
+                        );
+
+                        await InspecionarCandidaturaAsync(page);
+
+                        return "CANDIDATURA_LINKEDIN_ETAPA_2_BOTAO_NAO_ENCONTRADO";
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(
+                            "=========================================="
+                        );
+
+                        Console.WriteLine(
+                            "ERRO AO PROCESSAR A ETAPA 2 DA CANDIDATURA"
+                        );
+
+                        Console.WriteLine(
+                            ex.Message
+                        );
+
+                        Console.WriteLine(
+                            "=========================================="
+                        );
+
+                        return "ERRO_CANDIDATURA_LINKEDIN_ETAPA_2";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        "=========================================="
+                    );
+
+                    Console.WriteLine(
+                        "ERRO AO PREENCHER A PRIMEIRA ETAPA"
+                    );
+
+                    Console.WriteLine(
+                        ex.Message
+                    );
+
+                    Console.WriteLine(
+                        "=========================================="
+                    );
+
+                    return "ERRO_CANDIDATURA_LINKEDIN";
+                }
+            }
+
+            // ============================================================
+            // ÚLTIMA TENTATIVA:
+            // VERIFICAR SE A PÁGINA MUDOU PARA UMA TELA DE CANDIDATURA
+            // ============================================================
+
+            try
+            {
+                var dialogs =
+                    page.Locator("[role='dialog']");
+
+                var quantidadeDialogs =
+                    await dialogs.CountAsync();
+
+                Console.WriteLine(
+                    $"Dialogs encontrados na página: {quantidadeDialogs}"
+                );
+
+                if (quantidadeDialogs > 0)
+                {
+                    for (int i = 0; i < quantidadeDialogs; i++)
+                    {
+                        try
+                        {
+                            if (!await dialogs.Nth(i).IsVisibleAsync())
+                                continue;
+
+                            var textoDialog =
+                                await dialogs.Nth(i).InnerTextAsync();
+
+                            Console.WriteLine(
+                                "=========================================="
+                            );
+
+                            Console.WriteLine(
+                                "TEXTO DO DIALOG ENCONTRADO:"
+                            );
+
+                            Console.WriteLine(
+                                textoDialog
+                            );
+
+                            Console.WriteLine(
+                                "=========================================="
+                            );
+
+                            if (
+                                textoDialog.Contains(
+                                    "candidatura",
+                                    StringComparison.OrdinalIgnoreCase)
+                                ||
+                                textoDialog.Contains(
+                                    "candidatar",
+                                    StringComparison.OrdinalIgnoreCase)
+                                ||
+                                textoDialog.Contains(
+                                    "próximo",
+                                    StringComparison.OrdinalIgnoreCase)
+                                ||
+                                textoDialog.Contains(
+                                    "enviar",
+                                    StringComparison.OrdinalIgnoreCase)
+                                ||
+                                textoDialog.Contains(
+                                    "currículo",
+                                    StringComparison.OrdinalIgnoreCase)
+                                ||
+                                textoDialog.Contains(
+                                    "curriculo",
+                                    StringComparison.OrdinalIgnoreCase)
+                            )
+                            {
+                                Console.WriteLine(
+                                    "Dialog identificado como formulário de candidatura."
+                                );
+
+                                return "CANDIDATURA_LINKEDIN_ABERTA";
+                            }
+                        }
+                        catch
+                        {
+                            // Continua.
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    $"Erro ao analisar dialogs: {ex.Message}"
+                );
+            }
+
+            // ============================================================
+            // NÃO FOI POSSÍVEL IDENTIFICAR
+            // ============================================================
+
             Console.WriteLine(
-                "O botão 'Candidate-se' foi clicado, mas não foi possível identificar o próximo passo."
+                "================================================"
+            );
+
+            Console.WriteLine(
+                "O botão de candidatura foi clicado, porém o próximo passo não foi identificado."
+            );
+
+            Console.WriteLine(
+                $"URL ATUAL: {page.Url}"
+            );
+
+            Console.WriteLine(
+                "================================================"
             );
 
             return "CANDIDATURA_NAO_ENCONTRADA";
         }
 
         // ================================================================
+        // INSPEÇÃO DA CANDIDATURA
+        // ================================================================
+        private async Task InspecionarCandidaturaAsync(IPage page)
+        {
+            string pastaLogs = Path.Combine(AppContext.BaseDirectory, "logs");
+
+            Directory.CreateDirectory(pastaLogs);
+
+            string nomeArquivo =
+                $"candidatura-linkedin-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.txt";
+
+            string caminhoArquivo = Path.Combine(pastaLogs, nomeArquivo);
+
+            using StreamWriter log = new StreamWriter(
+                caminhoArquivo,
+                append: false,
+                encoding: System.Text.Encoding.UTF8
+            );
+
+            // =========================================================
+            // ESCREVE NO ARQUIVO
+            // =========================================================
+
+            async Task LogArquivoAsync(string texto = "")
+            {
+                await log.WriteLineAsync(texto);
+            }
+
+            // =========================================================
+            // ESCREVE NO TERMINAL E NO ARQUIVO
+            // =========================================================
+
+            async Task LogTerminalEArquivoAsync(string texto = "")
+            {
+                Console.WriteLine(texto);
+                await log.WriteLineAsync(texto);
+            }
+
+            // =========================================================
+            // ARQUIVO SOMENTE
+            // =========================================================
+
+            async Task LogSomenteArquivoAsync(string texto = "")
+            {
+                await log.WriteLineAsync(texto);
+            }
+
+            try
+            {
+                // =====================================================
+                // CABEÇALHO
+                // =====================================================
+
+                await LogTerminalEArquivoAsync();
+                await LogTerminalEArquivoAsync(
+                    "============================================================"
+                );
+                await LogTerminalEArquivoAsync(
+                    "        INSPEÇÃO DA CANDIDATURA LINKEDIN"
+                );
+                await LogTerminalEArquivoAsync(
+                    "============================================================"
+                );
+
+                await LogTerminalEArquivoAsync(
+                    $"DATA/HORA: {DateTime.Now:dd/MM/yyyy HH:mm:ss}"
+                );
+
+                await LogTerminalEArquivoAsync(
+                    $"URL: {page.Url}"
+                );
+
+                string titulo = await page.TitleAsync();
+
+                await LogTerminalEArquivoAsync(
+                    $"TÍTULO: {titulo}"
+                );
+
+                // =====================================================
+                // TEXTO COMPLETO DA PÁGINA
+                // ARQUIVO
+                // =====================================================
+
+                await LogSomenteArquivoAsync();
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+                await LogSomenteArquivoAsync(
+                    "################ TEXTO COMPLETO DA PÁGINA ################"
+                );
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+
+                string textoPagina = await page
+                    .Locator("body")
+                    .InnerTextAsync();
+
+                await LogSomenteArquivoAsync(textoPagina);
+
+                // =====================================================
+                // DIALOG
+                // =====================================================
+
+                var dialogs = page.GetByRole(AriaRole.Dialog);
+
+                int quantidadeDialogs = await dialogs.CountAsync();
+
+                await LogSomenteArquivoAsync();
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+                await LogSomenteArquivoAsync(
+                    "################ DIALOGS ################"
+                );
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+
+                await LogSomenteArquivoAsync(
+                    $"QUANTIDADE DE DIALOGS: {quantidadeDialogs}"
+                );
+
+                string textoDialogPrincipal = "";
+
+                if (quantidadeDialogs > 0)
+                {
+                    var dialog = dialogs.Nth(0);
+
+                    textoDialogPrincipal = await dialog.InnerTextAsync();
+
+                    await LogSomenteArquivoAsync();
+                    await LogSomenteArquivoAsync(
+                        "----- DIALOG [0] -----"
+                    );
+
+                    await LogSomenteArquivoAsync(
+                        textoDialogPrincipal
+                    );
+                }
+
+                // =====================================================
+                // TERMINAL - RESUMO DO DIALOG
+                // =====================================================
+
+                await LogTerminalEArquivoAsync();
+                await LogTerminalEArquivoAsync(
+                    "---------------- DIALOG ----------------"
+                );
+
+                if (!string.IsNullOrWhiteSpace(textoDialogPrincipal))
+                {
+                    string[] linhasDialog =
+                        textoDialogPrincipal
+                            .Split(
+                                new[] { '\r', '\n' },
+                                StringSplitOptions.RemoveEmptyEntries
+                            )
+                            .Select(x => x.Trim())
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .Take(20)
+                            .ToArray();
+
+                    foreach (string linha in linhasDialog)
+                    {
+                        await LogTerminalEArquivoAsync(linha);
+                    }
+                }
+                else
+                {
+                    await LogTerminalEArquivoAsync(
+                        "Nenhum dialog encontrado."
+                    );
+                }
+
+                // =====================================================
+                // INPUTS
+                // =====================================================
+
+                var inputs = page.Locator("input");
+
+                int quantidadeInputs = await inputs.CountAsync();
+
+                await LogSomenteArquivoAsync();
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+                await LogSomenteArquivoAsync(
+                    "################ INPUTS ################"
+                );
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+
+                await LogSomenteArquivoAsync(
+                    $"QUANTIDADE DE INPUTS: {quantidadeInputs}"
+                );
+
+                await LogTerminalEArquivoAsync();
+                await LogTerminalEArquivoAsync(
+                    "---------------- INPUTS ----------------"
+                );
+
+                if (quantidadeInputs == 0)
+                {
+                    await LogTerminalEArquivoAsync(
+                        "Nenhum input encontrado."
+                    );
+                }
+
+                for (int i = 0; i < quantidadeInputs; i++)
+                {
+                    var input = inputs.Nth(i);
+
+                    try
+                    {
+                        string type =
+                            await input.GetAttributeAsync("type") ?? "";
+
+                        string name =
+                            await input.GetAttributeAsync("name") ?? "";
+
+                        string id =
+                            await input.GetAttributeAsync("id") ?? "";
+
+                        string value =
+                            await input.InputValueAsync();
+
+                        string placeholder =
+                            await input.GetAttributeAsync("placeholder") ?? "";
+
+                        string ariaLabel =
+                            await input.GetAttributeAsync("aria-label") ?? "";
+
+                        string autocomplete =
+                            await input.GetAttributeAsync("autocomplete") ?? "";
+
+                        string required =
+                            await input.GetAttributeAsync("required") ?? "";
+
+                        bool visible =
+                            await input.IsVisibleAsync();
+
+                        // ---------------------------------------------
+                        // ARQUIVO COMPLETO
+                        // ---------------------------------------------
+
+                        await LogSomenteArquivoAsync();
+                        await LogSomenteArquivoAsync(
+                            $"INPUT [{i}]"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  type: {type}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  name: {name}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  id: {id}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  value: {value}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  placeholder: {placeholder}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  aria-label: {ariaLabel}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  autocomplete: {autocomplete}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  required: {required}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  visible: {visible}"
+                        );
+
+                        // ---------------------------------------------
+                        // TERMINAL RESUMIDO
+                        // ---------------------------------------------
+
+                        string valorTerminal =
+                            string.IsNullOrWhiteSpace(value)
+                                ? "(vazio)"
+                                : value;
+
+                        string identificacao =
+                            !string.IsNullOrWhiteSpace(name)
+                                ? $"name={name}"
+                                : !string.IsNullOrWhiteSpace(id)
+                                    ? $"id={id}"
+                                    : !string.IsNullOrWhiteSpace(ariaLabel)
+                                        ? $"aria-label={ariaLabel}"
+                                        : "";
+
+                        await LogTerminalEArquivoAsync(
+                            $"[{i}] type={type} | {identificacao} | value={valorTerminal} | visible={visible}"
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        await LogSomenteArquivoAsync(
+                            $"INPUT [{i}] ERRO: {ex}"
+                        );
+
+                        await LogTerminalEArquivoAsync(
+                            $"[{i}] ERRO ao inspecionar input."
+                        );
+                    }
+                }
+
+                // =====================================================
+                // TEXTAREAS
+                // =====================================================
+
+                var textareas = page.Locator("textarea");
+
+                int quantidadeTextareas =
+                    await textareas.CountAsync();
+
+                await LogSomenteArquivoAsync();
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+                await LogSomenteArquivoAsync(
+                    "################ TEXTAREAS ################"
+                );
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+
+                await LogSomenteArquivoAsync(
+                    $"QUANTIDADE DE TEXTAREAS: {quantidadeTextareas}"
+                );
+
+                await LogTerminalEArquivoAsync();
+                await LogTerminalEArquivoAsync(
+                    "---------------- TEXTAREAS ----------------"
+                );
+
+                if (quantidadeTextareas == 0)
+                {
+                    await LogTerminalEArquivoAsync(
+                        "Nenhuma textarea encontrada."
+                    );
+                }
+
+                for (int i = 0; i < quantidadeTextareas; i++)
+                {
+                    var textarea = textareas.Nth(i);
+
+                    try
+                    {
+                        string name =
+                            await textarea.GetAttributeAsync("name") ?? "";
+
+                        string id =
+                            await textarea.GetAttributeAsync("id") ?? "";
+
+                        string placeholder =
+                            await textarea.GetAttributeAsync("placeholder") ?? "";
+
+                        string ariaLabel =
+                            await textarea.GetAttributeAsync("aria-label") ?? "";
+
+                        string value =
+                            await textarea.InputValueAsync();
+
+                        bool visible =
+                            await textarea.IsVisibleAsync();
+
+                        // ARQUIVO
+                        await LogSomenteArquivoAsync();
+                        await LogSomenteArquivoAsync(
+                            $"TEXTAREA [{i}]"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  name: {name}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  id: {id}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  value: {value}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  placeholder: {placeholder}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  aria-label: {ariaLabel}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  visible: {visible}"
+                        );
+
+                        // TERMINAL
+                        string identificacao =
+                            !string.IsNullOrWhiteSpace(name)
+                                ? $"name={name}"
+                                : !string.IsNullOrWhiteSpace(id)
+                                    ? $"id={id}"
+                                    : !string.IsNullOrWhiteSpace(ariaLabel)
+                                        ? $"aria-label={ariaLabel}"
+                                        : "";
+
+                        string valorTerminal =
+                            string.IsNullOrWhiteSpace(value)
+                                ? "(vazio)"
+                                : value;
+
+                        await LogTerminalEArquivoAsync(
+                            $"[{i}] {identificacao} | value={valorTerminal} | visible={visible}"
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        await LogSomenteArquivoAsync(
+                            $"TEXTAREA [{i}] ERRO: {ex}"
+                        );
+
+                        await LogTerminalEArquivoAsync(
+                            $"[{i}] ERRO ao inspecionar textarea."
+                        );
+                    }
+                }
+
+                // =====================================================
+                // SELECTS
+                // =====================================================
+
+                var selects = page.Locator("select");
+
+                int quantidadeSelects =
+                    await selects.CountAsync();
+
+                await LogSomenteArquivoAsync();
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+                await LogSomenteArquivoAsync(
+                    "################ SELECTS ################"
+                );
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+
+                await LogSomenteArquivoAsync(
+                    $"QUANTIDADE DE SELECTS: {quantidadeSelects}"
+                );
+
+                await LogTerminalEArquivoAsync();
+                await LogTerminalEArquivoAsync(
+                    "---------------- SELECTS ----------------"
+                );
+
+                if (quantidadeSelects == 0)
+                {
+                    await LogTerminalEArquivoAsync(
+                        "Nenhum select encontrado."
+                    );
+                }
+
+                for (int i = 0; i < quantidadeSelects; i++)
+                {
+                    var select = selects.Nth(i);
+
+                    try
+                    {
+                        string name =
+                            await select.GetAttributeAsync("name") ?? "";
+
+                        string id =
+                            await select.GetAttributeAsync("id") ?? "";
+
+                        string ariaLabel =
+                            await select.GetAttributeAsync("aria-label") ?? "";
+
+                        string valorAtual =
+                            await select.InputValueAsync();
+
+                        bool visible =
+                            await select.IsVisibleAsync();
+
+                        // ARQUIVO
+                        await LogSomenteArquivoAsync();
+                        await LogSomenteArquivoAsync(
+                            $"SELECT [{i}]"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  name: {name}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  id: {id}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  aria-label: {ariaLabel}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  valor atual: {valorAtual}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  visible: {visible}"
+                        );
+
+                        var options =
+                            select.Locator("option");
+
+                        int quantidadeOptions =
+                            await options.CountAsync();
+
+                        await LogSomenteArquivoAsync(
+                            $"  OPTIONS: {quantidadeOptions}"
+                        );
+
+                        for (int j = 0; j < quantidadeOptions; j++)
+                        {
+                            var option = options.Nth(j);
+
+                            string texto =
+                                await option.InnerTextAsync();
+
+                            string valor =
+                                await option.GetAttributeAsync("value") ?? "";
+
+                            await LogSomenteArquivoAsync(
+                                $"    [{j}] texto=\"{texto}\" value=\"{valor}\""
+                            );
+                        }
+
+                        // TERMINAL
+                        string identificacao =
+                            !string.IsNullOrWhiteSpace(name)
+                                ? $"name={name}"
+                                : !string.IsNullOrWhiteSpace(id)
+                                    ? $"id={id}"
+                                    : !string.IsNullOrWhiteSpace(ariaLabel)
+                                        ? $"aria-label={ariaLabel}"
+                                        : $"select[{i}]";
+
+                        await LogTerminalEArquivoAsync(
+                            $"[{i}] {identificacao} | valor atual={valorAtual} | options={quantidadeOptions} | visible={visible}"
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        await LogSomenteArquivoAsync(
+                            $"SELECT [{i}] ERRO: {ex}"
+                        );
+
+                        await LogTerminalEArquivoAsync(
+                            $"[{i}] ERRO ao inspecionar select."
+                        );
+                    }
+                }
+
+                // =====================================================
+                // BOTÕES
+                // =====================================================
+
+                var buttons = page.Locator("button");
+
+                int quantidadeButtons =
+                    await buttons.CountAsync();
+
+                await LogSomenteArquivoAsync();
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+                await LogSomenteArquivoAsync(
+                    "################ BUTTONS ################"
+                );
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+
+                await LogSomenteArquivoAsync(
+                    $"QUANTIDADE DE BUTTONS: {quantidadeButtons}"
+                );
+
+                await LogTerminalEArquivoAsync();
+                await LogTerminalEArquivoAsync(
+                    "---------------- BUTTONS ----------------"
+                );
+
+                int botoesVisiveis = 0;
+
+                for (int i = 0; i < quantidadeButtons; i++)
+                {
+                    var button = buttons.Nth(i);
+
+                    try
+                    {
+                        string texto =
+                            (await button.InnerTextAsync()).Trim();
+
+                        string type =
+                            await button.GetAttributeAsync("type") ?? "";
+
+                        string ariaLabel =
+                            await button.GetAttributeAsync("aria-label") ?? "";
+
+                        string name =
+                            await button.GetAttributeAsync("name") ?? "";
+
+                        string id =
+                            await button.GetAttributeAsync("id") ?? "";
+
+                        bool visible =
+                            await button.IsVisibleAsync();
+
+                        // ARQUIVO COMPLETO
+                        await LogSomenteArquivoAsync();
+                        await LogSomenteArquivoAsync(
+                            $"BUTTON [{i}]"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  texto: {texto}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  type: {type}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  aria-label: {ariaLabel}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  name: {name}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  id: {id}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  visible: {visible}"
+                        );
+
+                        // TERMINAL
+                        if (visible && !string.IsNullOrWhiteSpace(texto))
+                        {
+                            await LogTerminalEArquivoAsync(
+                                $"[{i}] {texto} | visible={visible}"
+                            );
+
+                            botoesVisiveis++;
+                        }
+                        else if (
+                            visible &&
+                            !string.IsNullOrWhiteSpace(ariaLabel)
+                        )
+                        {
+                            await LogTerminalEArquivoAsync(
+                                $"[{i}] aria-label={ariaLabel} | visible={visible}"
+                            );
+
+                            botoesVisiveis++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        await LogSomenteArquivoAsync(
+                            $"BUTTON [{i}] ERRO: {ex}"
+                        );
+                    }
+                }
+
+                if (botoesVisiveis == 0)
+                {
+                    await LogTerminalEArquivoAsync(
+                        "Nenhum botão relevante encontrado."
+                    );
+                }
+
+                // =====================================================
+                // LINKS
+                // =====================================================
+
+                var links = page.Locator("a");
+
+                int quantidadeLinks =
+                    await links.CountAsync();
+
+                await LogSomenteArquivoAsync();
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+                await LogSomenteArquivoAsync(
+                    "################ LINKS ################"
+                );
+                await LogSomenteArquivoAsync(
+                    "############################################################"
+                );
+
+                await LogSomenteArquivoAsync(
+                    $"QUANTIDADE DE LINKS: {quantidadeLinks}"
+                );
+
+                // Não poluir o terminal.
+                // Links completos ficam SOMENTE no arquivo.
+
+                for (int i = 0; i < quantidadeLinks; i++)
+                {
+                    var link = links.Nth(i);
+
+                    try
+                    {
+                        string texto =
+                            (await link.InnerTextAsync()).Trim();
+
+                        string href =
+                            await link.GetAttributeAsync("href") ?? "";
+
+                        string ariaLabel =
+                            await link.GetAttributeAsync("aria-label") ?? "";
+
+                        bool visible =
+                            await link.IsVisibleAsync();
+
+                        await LogSomenteArquivoAsync();
+                        await LogSomenteArquivoAsync(
+                            $"LINK [{i}]"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  texto: {texto}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  href: {href}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  aria-label: {ariaLabel}"
+                        );
+                        await LogSomenteArquivoAsync(
+                            $"  visible: {visible}"
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        await LogSomenteArquivoAsync(
+                            $"LINK [{i}] ERRO: {ex}"
+                        );
+                    }
+                }
+
+                // =====================================================
+                // RESUMO FINAL
+                // =====================================================
+
+                await LogTerminalEArquivoAsync();
+                await LogTerminalEArquivoAsync(
+                    "============================================================"
+                );
+                await LogTerminalEArquivoAsync(
+                    "INSPEÇÃO FINALIZADA"
+                );
+                await LogTerminalEArquivoAsync(
+                    "============================================================"
+                );
+
+                await LogTerminalEArquivoAsync(
+                    $"Inputs encontrados: {quantidadeInputs}"
+                );
+
+                await LogTerminalEArquivoAsync(
+                    $"Textareas encontradas: {quantidadeTextareas}"
+                );
+
+                await LogTerminalEArquivoAsync(
+                    $"Selects encontrados: {quantidadeSelects}"
+                );
+
+                await LogTerminalEArquivoAsync(
+                    $"Botões encontrados: {quantidadeButtons}"
+                );
+
+                await LogTerminalEArquivoAsync(
+                    $"Links encontrados: {quantidadeLinks}"
+                );
+
+                await LogTerminalEArquivoAsync();
+                await LogTerminalEArquivoAsync(
+                    $"LOG COMPLETO: {caminhoArquivo}"
+                );
+
+                await LogTerminalEArquivoAsync(
+                    "============================================================"
+                );
+            }
+            catch (Exception ex)
+            {
+                await LogSomenteArquivoAsync();
+                await LogSomenteArquivoAsync(
+                    "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                );
+                await LogSomenteArquivoAsync(
+                    "ERRO DURANTE A INSPEÇÃO"
+                );
+                await LogSomenteArquivoAsync(
+                    "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                );
+                await LogSomenteArquivoAsync(
+                    ex.ToString()
+                );
+
+                Console.WriteLine();
+                Console.WriteLine("ERRO DURANTE A INSPEÇÃO.");
+                Console.WriteLine($"Veja o log: {caminhoArquivo}");
+            }
+            finally
+            {
+                await log.FlushAsync();
+            }
+        }
+
+        // ================================================================
         // CONVERTER LINK DO LINKEDIN PARA LINK REAL
         // ================================================================
-
         private string ObterLinkRealCandidatura(string link)
         {
             try
@@ -728,34 +3013,182 @@ namespace JobApply.Services
 
         // ============================================================
         // DETECTAR LOGIN LINKEDIN
-        // ============================================================
-
+        // ============================================================  
         private async Task<bool> PrecisaLoginLinkedInAsync(IPage page)
         {
-            var url = page.Url.ToLowerInvariant();
-
-            if (
-                url.Contains("/login") ||
-                url.Contains("/checkpoint") ||
-                url.Contains("/authwall"))
+            try
             {
-                return true;
-            }
+                Console.WriteLine("========== VERIFICANDO LOGIN LINKEDIN ==========");
 
-            var indicadores =
-                page.Locator(
-                    "input[name='session_key'], " +
-                    "input[name='session_password'], " +
-                    "form[action*='login']"
+                string urlAtual = page.Url;
+
+                Console.WriteLine($"URL para verificar login: {urlAtual}");
+
+                // ============================================================
+                // 1. VERIFICAR A URL
+                // ============================================================
+
+                if (urlAtual.Contains(
+                        "/login",
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    urlAtual.Contains(
+                        "/signup",
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    urlAtual.Contains(
+                        "/checkpoint",
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    urlAtual.Contains(
+                        "authwall",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine(
+                        "LinkedIn redirecionou para uma página de login/autenticação."
+                    );
+
+                    return true;
+                }
+
+                // ============================================================
+                // 2. VERIFICAR ELEMENTOS DA TELA DE LOGIN
+                // ============================================================
+
+                var campoEmail =
+                    page.Locator(
+                        "input[name='session_key'], " +
+                        "input[name='email-or-phone'], " +
+                        "input[id='username']"
+                    );
+
+                var campoSenha =
+                    page.Locator(
+                        "input[name='session_password'], " +
+                        "input[name='password'], " +
+                        "input[id='password']"
+                    );
+
+                int quantidadeEmail =
+                    await campoEmail.CountAsync();
+
+                int quantidadeSenha =
+                    await campoSenha.CountAsync();
+
+                Console.WriteLine(
+                    $"Campos de e-mail encontrados: {quantidadeEmail}"
                 );
 
-            return await indicadores.CountAsync() > 0;
+                Console.WriteLine(
+                    $"Campos de senha encontrados: {quantidadeSenha}"
+                );
+
+                if (quantidadeEmail > 0 && quantidadeSenha > 0)
+                {
+                    Console.WriteLine(
+                        "Tela de login do LinkedIn detectada."
+                    );
+
+                    return true;
+                }
+
+                // ============================================================
+                // 3. VERIFICAR TEXTOS DA TELA DE LOGIN
+                // ============================================================
+
+                var textoEntrar =
+                    page.GetByText(
+                        "Entrar",
+                        new PageGetByTextOptions
+                        {
+                            Exact = true
+                        });
+
+                var textoEmailOuTelefone =
+                    page.GetByText(
+                        "E-mail ou telefone",
+                        new PageGetByTextOptions
+                        {
+                            Exact = true
+                        });
+
+                var quantidadeEntrar =
+                    await textoEntrar.CountAsync();
+
+                var quantidadeEmailTexto =
+                    await textoEmailOuTelefone.CountAsync();
+
+                Console.WriteLine(
+                    $"Texto 'Entrar' encontrado: {quantidadeEntrar}"
+                );
+
+                Console.WriteLine(
+                    $"Texto 'E-mail ou telefone' encontrado: {quantidadeEmailTexto}"
+                );
+
+                if (quantidadeEmailTexto > 0)
+                {
+                    Console.WriteLine(
+                        "Página de autenticação do LinkedIn detectada."
+                    );
+
+                    return true;
+                }
+
+                // ============================================================
+                // 4. VERIFICAR AUTHWALL
+                // ============================================================
+
+                var authWall =
+                    page.Locator(
+                        ".authwall-join-form, " +
+                        ".join-form, " +
+                        "#session_key, " +
+                        "#session_password"
+                    );
+
+                int quantidadeAuthWall =
+                    await authWall.CountAsync();
+
+                Console.WriteLine(
+                    $"Elementos de AuthWall encontrados: {quantidadeAuthWall}"
+                );
+
+                if (quantidadeAuthWall > 0)
+                {
+                    Console.WriteLine(
+                        "AuthWall do LinkedIn detectado."
+                    );
+
+                    return true;
+                }
+
+                // ============================================================
+                // 5. NÃO FOI IDENTIFICADO LOGIN
+                // ============================================================
+
+                Console.WriteLine(
+                    "Não foi identificada uma tela de login do LinkedIn."
+                );
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    $"Erro ao verificar login do LinkedIn: {ex.Message}"
+                );
+
+                // Em caso de erro na verificação,
+                // não vamos assumir que o usuário está logado.
+                return true;
+            }
         }
+
 
         // ============================================================
         // DETECTAR LOGIN SITE EXTERNO
         // ============================================================
-
         private async Task<bool> PrecisaLoginSiteExternoAsync(IPage page)
         {
             var url = page.Url.ToLowerInvariant();
@@ -802,7 +3235,6 @@ namespace JobApply.Services
         // ============================================================
         // FECHAR
         // ============================================================
-
         public async Task FecharAsync()
         {
             if (_browser != null)
@@ -818,9 +3250,11 @@ namespace JobApply.Services
             _playwright = null;
         }
 
-        private async Task<bool> AguardarLoginSiteExternoAsync(
-    IPage page,
-    int tempoMaximoSegundos = 120)
+
+        // ============================================================
+        // AGUARDAR LOGIN SITE EXTERNO
+        // ============================================================
+        private async Task<bool> AguardarLoginSiteExternoAsync(IPage page, int tempoMaximoSegundos = 120)
         {
             Console.WriteLine(
                 "Aguardando você fazer login no site externo..."
@@ -888,11 +3322,10 @@ namespace JobApply.Services
             return false;
         }
 
-
-        public async Task<List<VagaLinkedIn>> BuscarVagasAsync(
-     string termo,
-     string? localizacao,
-     string? periodo)
+        // ============================================================
+        // BUSCAR VAGAS
+        // ============================================================
+        public async Task<List<VagaLinkedIn>?> BuscarVagasAsync(string termo, string? localizacao, string? periodo)
         {
             Console.WriteLine("========== ENTROU NO BuscarVagasAsync ==========");
 
@@ -995,101 +3428,101 @@ namespace JobApply.Services
 
             var termosTI = new[]
             {
-        "ti",
-        "tecnologia",
-        "tecnologia da informação",
-        "technology",
-        "tech",
+                    "ti",
+                    "tecnologia",
+                    "tecnologia da informação",
+                    "technology",
+                    "tech",
 
-        "desenvolvedor",
-        "desenvolvedora",
-        "developer",
-        "programador",
-        "programadora",
-        "software",
-        "programming",
+                    "desenvolvedor",
+                    "desenvolvedora",
+                    "developer",
+                    "programador",
+                    "programadora",
+                    "software",
+                    "programming",
 
-        "full stack",
-        "fullstack",
-        "frontend",
-        "front end",
-        "front-end",
-        "backend",
-        "back end",
-        "back-end",
+                    "full stack",
+                    "fullstack",
+                    "frontend",
+                    "front end",
+                    "front-end",
+                    "backend",
+                    "back end",
+                    "back-end",
 
-        "java",
-        "python",
-        "javascript",
-        "typescript",
-        "c#",
-        ".net",
-        "php",
-        "react",
-        "angular",
-        "node",
-        "node.js",
+                    "java",
+                    "python",
+                    "javascript",
+                    "typescript",
+                    "c#",
+                    ".net",
+                    "php",
+                    "react",
+                    "angular",
+                    "node",
+                    "node.js",
 
-        "dados",
-        "data",
-        "analista de dados",
-        "data analyst",
-        "data science",
-        "cientista de dados",
-        "business intelligence",
-        "power bi",
+                    "dados",
+                    "data",
+                    "analista de dados",
+                    "data analyst",
+                    "data science",
+                    "cientista de dados",
+                    "business intelligence",
+                    "power bi",
 
-        "sql",
-        "banco de dados",
-        "database",
+                    "sql",
+                    "banco de dados",
+                    "database",
 
-        "suporte",
-        "suporte técnico",
-        "suporte ti",
-        "help desk",
-        "service desk",
-        "analista de suporte",
-        "technical support",
+                    "suporte",
+                    "suporte técnico",
+                    "suporte ti",
+                    "help desk",
+                    "service desk",
+                    "analista de suporte",
+                    "technical support",
 
-        "infraestrutura",
-        "infra",
-        "redes",
-        "network",
-        "networking",
-        "servidor",
+                    "infraestrutura",
+                    "infra",
+                    "redes",
+                    "network",
+                    "networking",
+                    "servidor",
 
-        "sistemas",
-        "sistemas de informação",
-        "analista de sistemas",
+                    "sistemas",
+                    "sistemas de informação",
+                    "analista de sistemas",
 
-        "cibersegurança",
-        "cybersecurity",
-        "segurança da informação",
-        "information security",
+                    "cibersegurança",
+                    "cybersecurity",
+                    "segurança da informação",
+                    "information security",
 
-        "cloud",
-        "aws",
-        "azure",
-        "devops",
+                    "cloud",
+                    "aws",
+                    "azure",
+                    "devops",
 
-        "qa",
-        "quality assurance",
-        "testes de software",
+                    "qa",
+                    "quality assurance",
+                    "testes de software",
 
-        "automação",
-        "automation",
-        "robótica",
-        "robotica",
+                    "automação",
+                    "automation",
+                    "robótica",
+                    "robotica",
 
-        "inteligência artificial",
-        "artificial intelligence",
-        "machine learning",
+                    "inteligência artificial",
+                    "artificial intelligence",
+                    "machine learning",
 
-        "lgpd",
-        "privacidade",
-        "governança de ti",
-        "governança de dados"
-    };
+                    "lgpd",
+                    "privacidade",
+                    "governança de ti",
+                    "governança de dados"
+                };
 
             bool buscaTI =
                 Normalizar(termo).Contains("estagio")
@@ -1130,6 +3563,88 @@ namespace JobApply.Services
                         Timeout = 60000
                     }
                 );
+
+                await pagina.WaitForTimeoutAsync(4000);
+
+                // VERIFICAÇÃO DE LOGIN DO LINKEDIN
+                Console.WriteLine("========== VERIFICANDO LOGIN DO LINKEDIN ==========");
+
+                if (await PrecisaLoginLinkedInAsync(pagina))
+                {
+                    Console.WriteLine("LOGIN NECESSÁRIO NO LINKEDIN.");
+                    Console.WriteLine($"URL ATUAL: {pagina.Url}");
+                    Console.WriteLine("AGUARDANDO O USUÁRIO REALIZAR O LOGIN...");
+
+                    var inicioEsperaLogin = DateTime.UtcNow;
+                    var tempoMaximoEspera = TimeSpan.FromMinutes(2);
+
+                    bool loginRealizado = false;
+
+                    while (DateTime.UtcNow - inicioEsperaLogin < tempoMaximoEspera)
+                    {
+                        await pagina.WaitForTimeoutAsync(2000);
+
+                        if (!await PrecisaLoginLinkedInAsync(pagina))
+                        {
+                            loginRealizado = true;
+
+                            Console.WriteLine("==========================================");
+                            Console.WriteLine("LOGIN DO LINKEDIN DETECTADO!");
+                            Console.WriteLine("CONTINUANDO A PESQUISA AUTOMATICAMENTE...");
+                            Console.WriteLine("==========================================");
+
+                            break;
+                        }
+
+                        Console.WriteLine("Aguardando login...");
+                    }
+
+                    if (!loginRealizado)
+                    {
+                        Console.WriteLine("==========================================");
+                        Console.WriteLine("TEMPO DE ESPERA DO LOGIN ESGOTADO.");
+                        Console.WriteLine("==========================================");
+
+                        return null;
+                    }
+
+                    // Depois do login, o LinkedIn pode redirecionar
+                    // para outra página. Então voltamos para a mesma busca.
+                    Console.WriteLine("VOLTANDO PARA A PÁGINA DA PESQUISA...");
+
+                    await pagina.GotoAsync(
+                        buscaUrl,
+                        new PageGotoOptions
+                        {
+                            WaitUntil = WaitUntilState.DOMContentLoaded,
+                            Timeout = 60000
+                        });
+
+                    await pagina.WaitForTimeoutAsync(4000);
+
+                    Console.WriteLine(
+                        "========== PESQUISA APÓS LOGIN =========="
+                    );
+
+                    Console.WriteLine(
+                        $"URL ATUAL: {pagina.Url}"
+                    );
+
+                    // Confirma novamente se o login foi realmente concluído.
+                    if (await PrecisaLoginLinkedInAsync(pagina))
+                    {
+                        Console.WriteLine("O LINKEDIN AINDA ESTÁ SOLICITANDO LOGIN.");
+
+                        return null;
+                    }
+
+                    Console.WriteLine("LOGIN CONFIRMADO.");
+                    Console.WriteLine("CONTINUANDO A EXTRAÇÃO DAS VAGAS.");
+                }
+                else
+                {
+                    Console.WriteLine("LOGIN DO LINKEDIN OK. CONTINUANDO A BUSCA.");
+                }
 
                 Console.WriteLine(
                     "========== GOTO FINALIZADO =========="
@@ -1219,15 +3734,7 @@ namespace JobApply.Services
             // NÃO USAR NETWORK IDLE NO LINKEDIN
             // ============================================================
 
-            Console.WriteLine(
-                "AGUARDANDO O LINKEDIN RENDERIZAR..."
-            );
-
             await pagina.WaitForTimeoutAsync(4000);
-
-            // ============================================================
-            // LOCALIZA OS CARDS
-            // ============================================================
 
             // ============================================================
             // LOCALIZA OS CARDS - LINKEDIN
@@ -1239,9 +3746,9 @@ namespace JobApply.Services
 
             int quantidadeCards = await cards.CountAsync();
 
-            Console.WriteLine(
-                $"CARDS [componentkey]: {quantidadeCards}"
-            );
+            // Console.WriteLine(
+            //     $"CARDS [componentkey]: {quantidadeCards}"
+            // );
 
             // ============================================================
             // FALLBACK 1
@@ -1315,17 +3822,23 @@ namespace JobApply.Services
 
             for (int paginaAtual = 1; paginaAtual <= maxPaginas; paginaAtual++)
             {
-                Console.WriteLine(
-                    $"========== PROCESSANDO PÁGINA {paginaAtual} =========="
-                );
 
-                Console.WriteLine(
-                    $"PÁGINA {paginaAtual}: {quantidadeCards} cards"
-                );
 
                 for (int i = 0; i < quantidadeCards; i++)
                 {
                     var card = cards.Nth(i);
+
+                    string htmlCard = await card.InnerHTMLAsync();
+
+                    // Console.WriteLine(
+                    //     $"================ HTML CARD {i} ================"
+                    // );
+
+                    // Console.WriteLine(htmlCard);
+
+                    // Console.WriteLine(
+                    //     $"================================================"
+                    // );
 
                     string id = "";
 
@@ -1595,30 +4108,57 @@ namespace JobApply.Services
                         }
                     }
 
+                    // ============================================================
+                    // INDICADORES DO LINKEDIN
+                    // ============================================================
+
                     string status = "";
 
                     try
                     {
-                        var statusElement =
-                            card.Locator(
-                                ".job-card-container__footer-job-state"
-                            ).First;
-
-                        if (await statusElement.CountAsync() > 0)
+                        var indicadoresPermitidos = new[]
                         {
-                            status =
-                                (
-                                    await statusElement.InnerTextAsync()
-                                ).Trim();
-                        }
-                    }
-                    catch
-                    {
-                    }
+                            "Visto",
+                            "Salva",
+                            "Candidatura simplificada"
+                        };
 
-                    if (string.IsNullOrWhiteSpace(status))
+                        var paragrafos = card.Locator("p");
+
+                        int quantidadeParagrafos =
+                            await paragrafos.CountAsync();
+
+                        var indicadoresEncontrados = new List<string>();
+
+                        for (int p = 0; p < quantidadeParagrafos; p++)
+                        {
+                            string texto = (
+                                await paragrafos.Nth(p).InnerTextAsync()
+                            ).Trim();
+
+                            foreach (var indicador in indicadoresPermitidos)
+                            {
+                                if (texto.Equals(
+                                    indicador,
+                                    StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (!indicadoresEncontrados.Contains(indicador))
+                                    {
+                                        indicadoresEncontrados.Add(indicador);
+                                    }
+
+                                    break;
+                                }
+                            }
+                        }
+
+                        status = string.Join(" • ", indicadoresEncontrados);
+                    }
+                    catch (Exception ex)
                     {
-                        status = "Visto";
+                        Console.WriteLine(
+                            $"ERRO AO IDENTIFICAR INDICADORES LINKEDIN: {ex.Message}"
+                        );
                     }
 
                     if (buscaTI)
@@ -1681,7 +4221,10 @@ namespace JobApply.Services
                             Localizacao = localizacaoVaga,
                             Link = link,
                             Publicacao = publicacao,
-                            StatusLinkedIn = status
+                            StatusLinkedIn = status,
+                            // A descrição será carregada somente
+                            // quando o usuário clicar em "Ver detalhes".
+                            Descricao = ""
                         }
                     );
 
@@ -1797,6 +4340,275 @@ namespace JobApply.Services
             return resultadoFinal;
 
         }
+
+        // ----------------------------------------------------
+        // OBTER DETALHES DA VAGA
+        // ----------------------------------------------------
+        public async Task<object?> ObterDetalhesVagaAsync(string link)
+        {
+            try
+            {
+                var page = await ObterPaginaAsync();
+
+                Console.WriteLine(
+                    "=========================================="
+                );
+                Console.WriteLine(
+                    "BUSCANDO DETALHES DA VAGA"
+                );
+                Console.WriteLine(
+                    $"LINK: {link}"
+                );
+                Console.WriteLine(
+                    "=========================================="
+                );
+
+                await page.GotoAsync(
+                    link,
+                    new PageGotoOptions
+                    {
+                        WaitUntil = WaitUntilState.DOMContentLoaded,
+                        Timeout = 30000
+                    }
+                );
+
+                await page.WaitForTimeoutAsync(2000);
+
+                // ----------------------------------------------------
+                // TÍTULO
+                // ----------------------------------------------------
+
+                string titulo = "";
+
+                try
+                {
+                    var elementoTitulo =
+                        page.Locator(
+                            "h1"
+                        ).First;
+
+                    if (await elementoTitulo.CountAsync() > 0)
+                    {
+                        titulo =
+                            (
+                                await elementoTitulo.InnerTextAsync()
+                            ).Trim();
+                    }
+                }
+                catch
+                {
+                }
+
+                // ----------------------------------------------------
+                // EMPRESA
+                // ----------------------------------------------------
+
+                string empresa = "";
+
+                try
+                {
+                    var elementoEmpresa =
+                        page.Locator(
+                            "a[href*='/company/']"
+                        ).First;
+
+                    if (await elementoEmpresa.CountAsync() > 0)
+                    {
+                        empresa =
+                            (
+                                await elementoEmpresa.InnerTextAsync()
+                            ).Trim();
+                    }
+                }
+                catch
+                {
+                }
+
+                // ----------------------------------------------------
+                // LOCALIZAÇÃO
+                // ----------------------------------------------------
+
+                string localizacao = "";
+
+                try
+                {
+                    var elementosTexto =
+                        page.Locator("span");
+
+                    int quantidade =
+                        await elementosTexto.CountAsync();
+
+                    for (int i = 0; i < quantidade; i++)
+                    {
+                        string texto =
+                            (
+                                await elementosTexto.Nth(i).InnerTextAsync()
+                            ).Trim();
+
+                        if (
+                            texto.Contains("São Paulo") ||
+                            texto.Contains("Brasil") ||
+                            texto.Contains("SP")
+                        )
+                        {
+                            localizacao = texto;
+                            break;
+                        }
+                    }
+                }
+                catch
+                {
+                }
+
+                // ----------------------------------------------------
+                // DESCRIÇÃO DA VAGA
+                // ----------------------------------------------------
+
+                string descricao = "";
+
+                try
+                {
+                    // Primeiro tenta os seletores conhecidos do LinkedIn
+                    var seletoresDescricao = new[]
+                    {
+                        ".jobs-description-content__text",
+                        ".jobs-description-content__text--stretch",
+                        ".jobs-box__html-content",
+                        ".jobs-description__content"
+                    };
+
+                    foreach (var seletor in seletoresDescricao)
+                    {
+                        try
+                        {
+                            var elemento =
+                                page.Locator(seletor).First;
+
+                            if (await elemento.CountAsync() > 0)
+                            {
+                                string texto =
+                                    (
+                                        await elemento.InnerTextAsync()
+                                    ).Trim();
+
+                                if (!string.IsNullOrWhiteSpace(texto))
+                                {
+                                    descricao = texto;
+
+                                    Console.WriteLine(
+                                        $"DESCRIÇÃO ENCONTRADA PELO SELETOR: {seletor}"
+                                    );
+
+                                    break;
+                                }
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
+
+                    // ------------------------------------------------
+                    // FALLBACK
+                    // Procura o bloco que contém "Sobre a vaga"
+                    // ------------------------------------------------
+
+                    if (string.IsNullOrWhiteSpace(descricao))
+                    {
+                        var elementos =
+                            page.Locator("div, section, article");
+
+                        int quantidade =
+                            await elementos.CountAsync();
+
+                        for (int i = 0; i < quantidade; i++)
+                        {
+                            try
+                            {
+                                var elemento =
+                                    elementos.Nth(i);
+
+                                string texto =
+                                    (
+                                        await elemento.InnerTextAsync()
+                                    ).Trim();
+
+                                if (string.IsNullOrWhiteSpace(texto))
+                                {
+                                    continue;
+                                }
+
+                                if (
+                                    texto.StartsWith(
+                                        "Sobre a vaga",
+                                        StringComparison.OrdinalIgnoreCase
+                                    )
+                                    &&
+                                    texto.Length > 500
+                                )
+                                {
+                                    descricao = texto;
+
+                                    // Console.WriteLine(
+                                    //     $"DESCRIÇÃO ENCONTRADA NO ELEMENTO: {i}"
+                                    // );
+
+                                    break;
+                                }
+                            }
+                            catch
+                            {
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"ERRO AO EXTRAIR DESCRIÇÃO: {ex.Message}"
+                    );
+                }
+
+                Console.WriteLine(
+                    $"DESCRIÇÃO: {descricao.Length} caracteres"
+                );
+
+
+                Console.WriteLine(
+                    $"TÍTULO: {titulo}"
+                );
+
+                Console.WriteLine(
+                    $"EMPRESA: {empresa}"
+                );
+
+                Console.WriteLine(
+                    $"LOCALIZAÇÃO: {localizacao}"
+                );
+
+                Console.WriteLine(
+                    $"DESCRIÇÃO: {descricao.Length} caracteres"
+                );
+
+                return new
+                {
+                    titulo,
+                    empresa,
+                    localizacao,
+                    descricao,
+                    link
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    $"ERRO AO OBTER DETALHES DA VAGA: {ex.Message}"
+                );
+
+                return null;
+            }
+        }
+
 
     }
 }

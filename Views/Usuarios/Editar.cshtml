@@ -6,7 +6,6 @@
 
 <div class="usuario-form-page">
 
-    ```
     <!-- CABEÇALHO -->
     <div class="usuario-form-header">
 
@@ -97,6 +96,54 @@
                 </div>
 
 
+                <!-- TELEFONE -->
+                <div class="usuario-field">
+
+                    <label asp-for="Telefone" class="usuario-label">
+
+                        Telefone
+
+                        <span class="campo-opcional">
+                            (opcional)
+                        </span>
+
+                    </label>
+
+                    <input asp-for="Telefone" type="tel" class="usuario-input" autocomplete="tel"
+                        placeholder="11999999999" />
+
+                    <span asp-validation-for="Telefone" class="usuario-error">
+                    </span>
+
+                </div>
+
+
+                <!-- PAÍS -->
+                <div class="usuario-field">
+
+                    <label asp-for="Pais" class="usuario-label">
+
+                        País
+
+                        <span class="campo-opcional">
+                            (opcional)
+                        </span>
+
+                    </label>
+
+                    <input asp-for="Pais" type="text" class="usuario-input" maxlength="2" autocomplete="country"
+                        placeholder="br" />
+
+                    <small style="display:block; margin-top:5px; color:#64748b; font-size:12px;">
+                        Informe o código do país com 2 letras. Exemplo: br
+                    </small>
+
+                    <span asp-validation-for="Pais" class="usuario-error">
+                    </span>
+
+                </div>
+
+
                 <!-- NOVA SENHA -->
                 <div class="usuario-field">
 
@@ -163,7 +210,6 @@
         </div>
 
     </div>
-    ```
 
 </div>
 

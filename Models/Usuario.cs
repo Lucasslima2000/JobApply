@@ -14,5 +14,9 @@ namespace JobApply.Models
 
         public DateTime DataCadastro { get; set; } =
             DateTime.UtcNow;
+
+        public string? Telefone { get; set; }
+
+        public string? Pais { get; set; }
     }
 }

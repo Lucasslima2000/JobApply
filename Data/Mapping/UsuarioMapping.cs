@@ -38,6 +38,14 @@ namespace JobApply.Data.Mappings
                 .HasDefaultValueSql(
                     "SYSUTCDATETIME()"
                 );
+
+            builder.Property(u => u.Telefone)
+                .HasMaxLength(30)
+                .IsRequired(false);
+
+            builder.Property(u => u.Pais)
+                .HasMaxLength(2)
+                .IsRequired(false);
         }
     }
 }
